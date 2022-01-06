@@ -7,21 +7,19 @@ DLL version by Agoaj
 #include <iostream>
 #include <fstream>
 #include <windows.h>
-#include <cstring>
+#include <string>
 
 using namespace std;
 
-char* brsarName = "smashbros_sound.brsar";
-char* spdFile = "sawnd.spd";
-char* sptFile = "sawnd.spt";
+std::string brsarName = "smashbros_sound.brsar";
+std::string spdFile = "sawnd.spd";
+std::string sptFile = "sawnd.spt";
 
-void setSoundFileName(char* fileName)
+void setSoundFileName(std::string fileName)
 {
 	spdFile = fileName;
-	sptFile = new char[strlen(fileName)];
-	strcpy(sptFile, fileName);
-	sptFile[strlen(fileName)-1] = 't';
-
+    sptFile = fileName;
+    sptFile.back() = 't';
 }
 
 long long arg[8];
@@ -63,8 +61,8 @@ void RemoveSpace(long long offset, long long size)
   Orig.close();
   Copy.close();
 
-  remove(brsarName);
-  std::rename("temp.brsar", brsarName);
+  remove(brsarName.c_str());
+  std::rename("temp.brsar", brsarName.c_str());
   //system("copy temp.brsar smashbros_sound.brsar");
   //remove("temp.brsar");
   }
@@ -106,8 +104,8 @@ void EmptySpace(long long offset, long long size)
   Orig.close();
   Copy.close();
 
-  remove(brsarName);
-  std::rename("temp.brsar", brsarName);
+  remove(brsarName.c_str());
+  std::rename("temp.brsar", brsarName.c_str());
   }
 
 int readint()
