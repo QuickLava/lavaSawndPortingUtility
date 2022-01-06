@@ -8,12 +8,23 @@ DLL version by Agoaj
 #include <fstream>
 #include <windows.h>
 #include <string>
-
-using namespace std;
+#include <vector>
 
 std::string brsarName = "smashbros_sound.brsar";
 std::string spdFile = "sawnd.spd";
 std::string sptFile = "sawnd.spt";
+
+// Returns 1 if the specified err message was cut off
+bool printError(int errnoIn)
+{
+	std::vector<char> errorMessageBuffer{};
+	// I'm currently hardcoding the err buffer to 32, because Visual Studio doesn't have an implementation of strerrorlen_s to properly check the length of the message.
+	errorMessageBuffer.resize(32);
+	// Get the message and store it in errorMessageBuffer, recording whether the message got cut off
+	bool fullMessageGotten = strerror_s(errorMessageBuffer.data(), 32, errno);
+	std::cerr << std::string(errorMessageBuffer.data());
+	return fullMessageGotten;
+}
 
 void setSoundFileName(std::string fileName)
 {
@@ -24,16 +35,18 @@ void setSoundFileName(std::string fileName)
 
 long long arg[8];
 
-fstream Orig, Copy;
+std::fstream Orig, Copy;
 
 void CopyData(long long size)
 {
-	char* data;
-	data = new char[size];
-	printf("%lld\n", size);
-	Orig.read(data, size);
-	Copy.write(data, size);
-	delete[] data;
+	std::vector<char> data{};
+	data.resize(size);
+	//char* data;
+	//data = new char[size];
+	std::cout << size;
+	//printf("%lld\n", size);
+	Orig.read(data.data(), size);
+	Copy.write(data.data(), size);
 }
 
 void RemoveSpace(long long offset, long long size)
@@ -44,17 +57,17 @@ void RemoveSpace(long long offset, long long size)
 
 	long long brsarsize;
 	char a;
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
-	Copy.open("temp.brsar", ios::in | ios::out | ios::app | ios::binary);
-	Orig.seekg(0, ios::end);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
+	Copy.open("temp.brsar", std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
+	Orig.seekg(0, std::ios::end);
 	brsarsize = Orig.tellg();
 
-	Orig.seekg(0, ios::beg);
-	Copy.seekg(0, ios::beg);
+	Orig.seekg(0, std::ios::beg);
+	Copy.seekg(0, std::ios::beg);
 
 	CopyData(offset);
 
-	Orig.seekg(offset + size, ios::beg);
+	Orig.seekg(offset + size, std::ios::beg);
 
 	CopyData(brsarsize - offset - size);
 
@@ -75,13 +88,13 @@ void EmptySpace(long long offset, long long size)
 
 	long long brsarsize;
 	char a;
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
-	Copy.open("temp.brsar", ios::in | ios::out | ios::app | ios::binary);
-	Orig.seekg(0, ios::end);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
+	Copy.open("temp.brsar", std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
+	Orig.seekg(0, std::ios::end);
 	brsarsize = Orig.tellg();
 
-	Orig.seekg(0, ios::beg);
-	Copy.seekg(0, ios::beg);
+	Orig.seekg(0, std::ios::beg);
+	Copy.seekg(0, std::ios::beg);
 
 	CopyData(offset);
 	printf("__________\n");
@@ -167,11 +180,11 @@ void SawndInsert2()
 	long long size_difference, grak;
 	int o;
 
-	Copy.open("sawnd.sawnd", ios::in | ios::out | ios::binary);
+	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary);
 	if (!Copy.good())
 	{
 		printf("Error Opening sawnd.sawnd\n");
-		printf(strerror(errno));
+		printError(errno);
 		return;
 	}
 	Copy.seekg(1);
@@ -180,11 +193,11 @@ void SawndInsert2()
 	Copy.seekg(5);
 	total_size = readintc();
 	// Find the group data.
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	if (!Orig.good())
 	{
 		printf("Error Opening brsar file: %s\n", brsarName);
-		printf(strerror(errno));
+		printError(errno);
 		return;
 	}
 	Orig.seekg(24);
@@ -192,19 +205,19 @@ void SawndInsert2()
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
-	Orig.seekg(relocation_address, ios::beg);
+	Orig.seekg(relocation_address, std::ios::beg);
 	address = readint();
 	// Read number of entries
-	Orig.seekg(info_address + 8 + address, ios::beg);
+	Orig.seekg(info_address + 8 + address, std::ios::beg);
 	group_num = readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
-		Orig.seekg(grprel_baseoff + i * 8, ios::beg);
+		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
 		address = readint();
-		Orig.seekg(info_address + 8 + address, ios::beg);
+		Orig.seekg(info_address + 8 + address, std::ios::beg);
 		grid = readint();
 		if (grid == groupe)
 		{
@@ -264,10 +277,10 @@ void SawndInsert2()
 		writeint(l2);
 	}
 	// Second, in the RSAR header.
-	Orig.seekg(36, ios::beg);
+	Orig.seekg(36, std::ios::beg);
 	address = readint();
 	address += size_difference;
-	Orig.seekg(36, ios::beg);
+	Orig.seekg(36, std::ios::beg);
 	writeint(address);
 	printf("Modifying Groups\n");
 	// Now groups.
@@ -308,10 +321,10 @@ void SawndInsert2()
 		RemoveSpace(base_rwsd, -size_difference);
 	if (size_difference > 0)
 		EmptySpace(base_rwsd, size_difference);
-	Orig.open("sawnd.sawnd", ios::in | ios::out | ios::binary);
-	Copy.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary);
+	Copy.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	long long edn;
-	Orig.seekg(0, ios::end);
+	Orig.seekg(0, std::ios::end);
 	edn = Orig.tellg();
 	Copy.seekp(base_rwsd);
 	Orig.seekg(9 + col_num * 12);
@@ -333,32 +346,32 @@ void SawndInsert1()
 	long long size_difference, grak;
 	int o;
 
-	Copy.open("sawnd.sawnd", ios::in | ios::out | ios::binary);
+	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary);
 	Copy.seekg(1);
 	groupe = readintc();
 	printf("target group: %d\n", groupe);
 	Copy.seekg(5);
 	total_size = readintc();
 	// Find the group data.
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	Orig.seekg(24);
 	address = readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
-	Orig.seekg(relocation_address, ios::beg);
+	Orig.seekg(relocation_address, std::ios::beg);
 	address = readint();
 	// Read number of entries
-	Orig.seekg(info_address + 8 + address, ios::beg);
+	Orig.seekg(info_address + 8 + address, std::ios::beg);
 	group_num = readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
-		Orig.seekg(grprel_baseoff + i * 8, ios::beg);
+		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
 		address = readint();
-		Orig.seekg(info_address + 8 + address, ios::beg);
+		Orig.seekg(info_address + 8 + address, std::ios::beg);
 		grid = readint();
 		if (grid == groupe)
 		{
@@ -417,10 +430,10 @@ void SawndInsert1()
 		writeint(l2);
 	}
 	// Second, in the RSAR header.
-	Orig.seekg(36, ios::beg);
+	Orig.seekg(36, std::ios::beg);
 	address = readint();
 	address += size_difference;
-	Orig.seekg(36, ios::beg);
+	Orig.seekg(36, std::ios::beg);
 	writeint(address);
 	// Now groups.
 	for (int i = grak + 1; i < group_num; i++)
@@ -459,8 +472,8 @@ void SawndInsert1()
 		RemoveSpace(base_rwsd, -size_difference);
 	if (size_difference > 0)
 		EmptySpace(base_rwsd, size_difference);
-	Orig.open("sawnd.sawnd", ios::in | ios::out | ios::binary);
-	Copy.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary);
+	Copy.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	Copy.seekp(base_rwsd);
 	Orig.seekg(9 + col_num * 12);
 	for (long long i = 0; i < total_size; i++)
@@ -477,7 +490,7 @@ void Sawnd()
 	printf("Inserting the .sawnd file... Please wait.\n");
 	char a;
 
-	Copy.open("sawnd.sawnd", ios::in | ios::out | ios::binary);
+	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary);
 	a = Copy.get();
 	if (a != 1 && a != 2)
 	{
@@ -504,21 +517,21 @@ void SawndCreate(long long group)
 	long long size_difference;
 	int o;
 
-	Copy.open("sawnd.sawnd", ios::in | ios::out | ios::binary | ios::app);
+	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
 	if (!Copy.good())
 	{
 		printf("Error creating sawnd.sawnd\n");
-		printf(strerror(errno));
+		printError(errno);
 		return;
 	}
 	Copy.put(2);
 	writeintc(group);
 	// Find the group data.
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	if (!Orig.good())
 	{
 		printf("Error Opening BRSAR %s\n", brsarName);
-		printf(strerror(errno));
+		printError(errno);
 		return;
 	}
 	Orig.seekg(24);
@@ -526,19 +539,19 @@ void SawndCreate(long long group)
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
-	Orig.seekg(relocation_address, ios::beg);
+	Orig.seekg(relocation_address, std::ios::beg);
 	address = readint();
 	// Read number of entries
-	Orig.seekg(info_address + 8 + address, ios::beg);
+	Orig.seekg(info_address + 8 + address, std::ios::beg);
 	group_num = readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
-		Orig.seekg(grprel_baseoff + i * 8, ios::beg);
+		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
 		address = readint();
-		Orig.seekg(info_address + 8 + address, ios::beg);
+		Orig.seekg(info_address + 8 + address, std::ios::beg);
 		grid = readint();
 		if (grid == group)
 		{
@@ -601,29 +614,31 @@ void Hex(long long group)
 {
 	printf("Inserting the hex packet... Please wait.\n");
 
-	char* data;
+	std::vector<char> data{};
+	constexpr int dataSize = 10240;
+	//char* data;
 	unsigned long long address, info_address, relocation_address, group_num, grprel_baseoff, grid, group_offset,
 		base_rwsd, size, progress;
 
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	Orig.seekg(24);
 	address = readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
-	Orig.seekg(relocation_address, ios::beg);
+	Orig.seekg(relocation_address, std::ios::beg);
 	address = readint();
 	// Read number of entries
-	Orig.seekg(info_address + 8 + address, ios::beg);
+	Orig.seekg(info_address + 8 + address, std::ios::beg);
 	group_num = readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
-		Orig.seekg(grprel_baseoff + i * 8, ios::beg);
+		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
 		address = readint();
-		Orig.seekg(info_address + 8 + address, ios::beg);
+		Orig.seekg(info_address + 8 + address, std::ios::beg);
 		grid = readint();
 		if (grid == group)
 		{
@@ -642,26 +657,26 @@ void Hex(long long group)
 	Orig.seekg(group_offset + 16);
 	base_rwsd = readint();
 
-	Copy.open("hex.hex", ios::in | ios::out | ios::binary);
-	Copy.seekg(0, ios::end);
+	Copy.open("hex.hex", std::ios::in | std::ios::out | std::ios::binary);
+	Copy.seekg(0, std::ios::end);
 	size = Copy.tellg();
-	Copy.seekg(0, ios::beg);
-	data = new char[10240];
+	Copy.seekg(0, std::ios::beg);
+
+	data.resize(dataSize);
 	Orig.seekp(base_rwsd);
 	progress = 0;
-	while (progress < size - 10240)
+	while (progress < size - dataSize)
 	{
-		Copy.read(data, 10240);
-		Orig.write(data, 10240);
-		progress += 10240;
+		Copy.read(data.data(), dataSize);
+		Orig.write(data.data(), dataSize);
+		progress += dataSize;
 	}
 	while (progress < size)
 	{
-		Copy.read(data, 1);
-		Orig.write(data, 1);
+		Copy.read(data.data(), 1);
+		Orig.write(data.data(), 1);
 		progress++;
 	}
-	delete[] data;
 	Copy.close();
 	Orig.close();
 }
@@ -685,8 +700,8 @@ void Insert(long long group, long long collection, long long wave, int frequency
 
 
 	// FIRST: Read the number of bytes of the sound.
-	Copy.open(spdFile, ios::in | ios::out | ios::binary);
-	Copy.seekg(0, ios::end);
+	Copy.open(spdFile, std::ios::in | std::ios::out | std::ios::binary);
+	Copy.seekg(0, std::ios::end);
 	new_size = Copy.tellg();
 	printf("new size inst %d\n", new_size);
 	Copy.close();
@@ -698,12 +713,12 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	}
 	// SECOND: Calculate the byte difference.
 	// Open the brsar.
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 
 	if (!Orig.good())
 	{
 		printf("Error Opening BRSAR\n");
-		printf(strerror(errno));
+		printError(errno);
 		return;
 	}
 
@@ -713,19 +728,19 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
-	Orig.seekg(relocation_address, ios::beg);
+	Orig.seekg(relocation_address, std::ios::beg);
 	address = readint();
 	// Read number of entries
-	Orig.seekg(info_address + 8 + address, ios::beg);
+	Orig.seekg(info_address + 8 + address, std::ios::beg);
 	group_num = readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
-		Orig.seekg(grprel_baseoff + i * 8, ios::beg);
+		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
 		address = readint();
-		Orig.seekg(info_address + 8 + address, ios::beg);
+		Orig.seekg(info_address + 8 + address, std::ios::beg);
 		grid = readint();
 		if (grid == group)
 		{
@@ -747,9 +762,9 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	Orig.seekg(group_offset + 24);
 	base_data = readint();
 	// Get the number of subgroups belonging to the group.
-	Orig.seekg(group_offset + 36, ios::beg);
+	Orig.seekg(group_offset + 36, std::ios::beg);
 	address = readint();
-	Orig.seekg(info_address + 8 + address, ios::beg);
+	Orig.seekg(info_address + 8 + address, std::ios::beg);
 	col_num = readint();
 	if (col_num <= 0)
 	{
@@ -763,9 +778,9 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	col_id = -1;
 	for (int i = 0; i < col_num; i++)
 	{
-		Orig.seekg(col_rel + 8 * i, ios::beg);
+		Orig.seekg(col_rel + 8 * i, std::ios::beg);
 		address = readint();
-		Orig.seekg(info_address + 8 + address, ios::beg);
+		Orig.seekg(info_address + 8 + address, std::ios::beg);
 		col_id = readint();
 		if (col_id == collection)
 		{
@@ -843,7 +858,7 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	else
 		EmptySpace(address, size_difference);
 	//printf("Opening BRSAR\n");
-	Orig.open(brsarName, ios::in | ios::out | ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	//printf("Opened BRSAR\n");
 	samples = size_difference + size_difference % 16;
 	size_difference = samples;
@@ -852,10 +867,10 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	// THIRD: Mass offset/length modifying.
 	// First, in the RSAR header.
 	//printf("Modifying RSAR header\n");
-	Orig.seekg(36, ios::beg);
+	Orig.seekg(36, std::ios::beg);
 	address = readint();
 	address += size_difference;
-	Orig.seekg(36, ios::beg);
+	Orig.seekg(36, std::ios::beg);
 	writeint(address);
 
 	// Now, onto collections.
@@ -903,7 +918,7 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	// The other collections.
 	for (int i = col_ide + 1; i < col_num; i++)
 	{
-		Orig.seekg(col_rel + 8 * i, ios::beg);
+		Orig.seekg(col_rel + 8 * i, std::ios::beg);
 		address = readint();
 		address += info_address + 8;
 
@@ -942,17 +957,17 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	samples = readint();
 	mydata = samples;
 	Orig.seekp(base_data + data_offset + samples);
-	Copy.open(spdFile, ios::in | ios::out | ios::binary);
+	Copy.open(spdFile, std::ios::in | std::ios::out | std::ios::binary);
 	if (!Copy.good())
 	{
 		printf("Error Opening sawnd.spd\n");
-		printf(strerror(errno));
+		printError(errno);
 		return;
 	}
 	//  printf("Opened Sawnd.spd\n");
-	Copy.seekp(0, ios::end);
+	Copy.seekp(0, std::ios::end);
 	samples = Copy.tellp();
-	Copy.seekp(0, ios::beg);
+	Copy.seekp(0, std::ios::beg);
 	data = new char[256];
 	address = 0;
 	unsigned long long percentCompleted = 0;
@@ -1016,8 +1031,8 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	writeint(new_size * 2);
 	// Paste the fix.
 	Orig.seekp(wave_offset + 60);
-	Copy.open(sptFile, ios::in | ios::out | ios::binary);
-	Copy.seekg(32, ios::beg);
+	Copy.open(sptFile, std::ios::in | std::ios::out | std::ios::binary);
+	Copy.seekg(32, std::ios::beg);
 	printf("fix\n");
 	data = new char[32];
 	Copy.read(data, 32);
@@ -1025,7 +1040,7 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	Orig.write(data, 32);
 	delete[] data;
 	printf("fix\n");
-	Copy.seekg(66, ios::beg);
+	Copy.seekg(66, std::ios::beg);
 	data = new char[2];
 	Copy.read(data, 2);
 	Orig.seekp(wave_offset + 94);
@@ -1050,16 +1065,20 @@ void Insert(long long group, long long collection, long long wave, int frequency
 
 int main(int argc, char** argv)
 {
-	setbuf(stdout, NULL);
-	Orig.exceptions(ios::badbit || ios::failbit);
-	Copy.exceptions(ios::badbit || ios::failbit);
-	printf("Sawndz 0.13\n2010-2011 Jaklub\n2012 Agoaj\n\nspecial thanks to mastaklo, ssbbtailsfan, stickman, VILE\n");
+	setvbuf(stdout, NULL, _IONBF, 0);
+	Orig.exceptions(std::ios::badbit || std::ios::failbit);
+	Copy.exceptions(std::ios::badbit || std::ios::failbit);
+	std::cout << "Sawndz 0.13 (Lava Touchup)\n2010-2011 Jaklub\n2012 Agoaj\n\nspecial thanks to mastaklo, ssbbtailsfan, stickman, VILE\n";
+	for (int i = 0; i < argc; i++)
+	{
+		std::cout << "\tArgV[" << i << "]:" << argv[i] << "\n";
+	}
 	try
 	{
 		// No args provided
 		if (argc == 1)
 		{
-			printf("Please run the Sawndz GUI.\n");
+			std::cerr << "Please run the Sawndz GUI.\n";
 			Sleep(1000);
 			return 0;
 		}
@@ -1069,12 +1088,12 @@ int main(int argc, char** argv)
 			{
 				if (argc != 4)
 				{
-					printf("Incorrect number of arguments.\nemptyspace command requires 2 arguments.\noffset\nnumber of bytes");
+					std::cerr << "Incorrect number of arguments.\nemptyspace command requires 2 arguments.\noffset\nnumber of bytes";
 					Sleep(1000);
 					return 0;
 				}
-				sscanf(argv[2], "%lld", &arg[0]);
-				sscanf(argv[3], "%lld", &arg[1]);
+				sscanf_s(argv[2], "%lld", &arg[0]);
+				sscanf_s(argv[3], "%lld", &arg[1]);
 				EmptySpace(arg[0], arg[1]);
 				return 0;
 			}
@@ -1082,12 +1101,12 @@ int main(int argc, char** argv)
 			{
 				if (argc != 4)
 				{
-					printf("Incorrect number of arguments.\nemptyspace command requires 2 arguments.\noffset\nnumber of bytes");
+					std::cerr << "Incorrect number of arguments.\nemptyspace command requires 2 arguments.\noffset\nnumber of bytes";
 					Sleep(1000);
 					return 0;
 				}
-				sscanf(argv[2], "%lld", &arg[0]);
-				sscanf(argv[3], "%lld", &arg[1]);
+				sscanf_s(argv[2], "%lld", &arg[0]);
+				sscanf_s(argv[3], "%lld", &arg[1]);
 				RemoveSpace(arg[0], arg[1]);
 				return 0;
 			}
@@ -1095,16 +1114,16 @@ int main(int argc, char** argv)
 			{
 				if (argc != 7 && argc != 8 && argc != 9)
 				{
-					printf("You supplied %d arguments\n", argc);
-					printf("Incorrect number of arguments.\ninsert command requires 4 arguments.\ngroup id\ncollection id\nwave id\nfrequency\nlooping (0 - not loop, any other - loop)\nOPTIONAL\nBRSAR File\n .spd File");
+					std::cerr << "You supplied " << argc << " arguments\n";
+					std::cerr << "Incorrect number of arguments.\ninsert command requires 4 arguments.\ngroup id\ncollection id\nwave id\nfrequency\nlooping (0 - not loop, any other - loop)\nOPTIONAL\nBRSAR File\n .spd File";
 					Sleep(1000);
 					return 0;
 				}
-				sscanf(argv[2], "%lld", &arg[0]);
-				sscanf(argv[3], "%lld", &arg[1]);
-				sscanf(argv[4], "%lld", &arg[2]);
-				sscanf(argv[5], "%lld", &arg[3]);
-				sscanf(argv[6], "%lld", &arg[4]);
+				sscanf_s(argv[2], "%lld", &arg[0]);
+				sscanf_s(argv[3], "%lld", &arg[1]);
+				sscanf_s(argv[4], "%lld", &arg[2]);
+				sscanf_s(argv[5], "%lld", &arg[3]);
+				sscanf_s(argv[6], "%lld", &arg[4]);
 				if (argc > 7)
 				{
 					brsarName = argv[7];
@@ -1118,16 +1137,16 @@ int main(int argc, char** argv)
 			{
 				if (argc != 8)
 				{
-					printf("Incorrect number of arguments.\nbaseinsert command requires 5 arguments.\ngroup id\ncollection id\nwave id\nfrequency\nlooping (0 - not loop, any other - loop)\nbase wave id");
+					std::cerr << "Incorrect number of arguments.\nbaseinsert command requires 5 arguments.\ngroup id\ncollection id\nwave id\nfrequency\nlooping (0 - not loop, any other - loop)\nbase wave id";
 					Sleep(1000);
 					return 0;
 				}
-				sscanf(argv[2], "%lld", &arg[0]);
-				sscanf(argv[3], "%lld", &arg[1]);
-				sscanf(argv[4], "%lld", &arg[2]);
-				sscanf(argv[5], "%lld", &arg[3]);
-				sscanf(argv[6], "%lld", &arg[4]);
-				sscanf(argv[7], "%lld", &arg[5]);
+				sscanf_s(argv[2], "%lld", &arg[0]);
+				sscanf_s(argv[3], "%lld", &arg[1]);
+				sscanf_s(argv[4], "%lld", &arg[2]);
+				sscanf_s(argv[5], "%lld", &arg[3]);
+				sscanf_s(argv[6], "%lld", &arg[4]);
+				sscanf_s(argv[7], "%lld", &arg[5]);
 				Insert(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
 				return 0;
 			}
@@ -1135,11 +1154,11 @@ int main(int argc, char** argv)
 			{
 				if (argc != 3)
 				{
-					printf("Incorrect number of arguments.\nhex command requires 1 argument.\ngroup id");
+					std::cerr << "Incorrect number of arguments.\nhex command requires 1 argument.\ngroup id";
 					Sleep(1000);
 					return 0;
 				}
-				sscanf(argv[2], "%lld", &arg[0]);
+				sscanf_s(argv[2], "%lld", &arg[0]);
 				Hex(arg[0]);
 				return 0;
 			}
@@ -1147,11 +1166,11 @@ int main(int argc, char** argv)
 			{
 				if (argc != 3 && argc != 4)
 				{
-					printf("Incorrect number of arguments.\nsawndcreate command requires 1 argument.\ngroup id\nOPTIONAL\nbrsar filename\n");
+					std::cerr << "Incorrect number of arguments.\nsawndcreate command requires 1 argument.\ngroup id\nOPTIONAL\nbrsar filename\n";
 					Sleep(1000);
 					return 0;
 				}
-				sscanf(argv[2], "%lld", &arg[0]);
+				sscanf_s(argv[2], "%lld", &arg[0]);
 				if (argc == 4)
 					brsarName = argv[3];
 				SawndCreate(arg[0]);
@@ -1164,17 +1183,19 @@ int main(int argc, char** argv)
 				Sawnd();
 				return 0;
 			}
-			printf("Incorrect command.\n");
+			std::cerr << "Incorrect command.\n";
 			Sleep(1000);
 			return 0;
 		}
 	}
 	catch (std::exception e)
 	{
-		printf("EXCEPTION");
+		std::cerr << "EXCEPTION: ";
 		if (errno)
-			printf(strerror(errno));
-		printf(e.what());
+		{
+			printError(errno);
+		}
+		std::cerr << e.what();
 		Sleep(1000);
 	}
 	return 0;
