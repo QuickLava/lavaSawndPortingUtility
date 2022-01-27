@@ -517,7 +517,7 @@ void SawndCreate(long long group)
 	long long size_difference;
 	int o;
 
-	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+	Copy.open("sawnd.sawnd", std::ios::out | std::ios::binary);
 	if (!Copy.good())
 	{
 		printf("Error creating sawnd.sawnd\n");
@@ -527,7 +527,7 @@ void SawndCreate(long long group)
 	Copy.put(2);
 	writeintc(group);
 	// Find the group data.
-	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
+	Orig.open(brsarName, std::ios::in | std::ios::binary);
 	if (!Orig.good())
 	{
 		printf("Error Opening BRSAR %s\n", brsarName);
