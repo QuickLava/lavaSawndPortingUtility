@@ -3,6 +3,7 @@ Debug/**
 Release/**
 sawndz_lavaTouchUp/Debug/**
 sawndz_lavaTouchUp/Release/**
-sawndz_lavaTouchUp/*.pac
+sawndz_lavaTouchUp/*.sawnd
+sawndz_lavaTouchUp/*.brsar
 sawndz_lavaTouchUp/Junk/**
 sawndz_lavaTouchUp/*.txt

@@ -9,22 +9,11 @@ DLL version by Agoaj
 #include <windows.h>
 #include <string>
 #include <vector>
+#include "lavaSawndz.h"
 
 std::string brsarName = "smashbros_sound.brsar";
 std::string spdFile = "sawnd.spd";
 std::string sptFile = "sawnd.spt";
-
-// Returns 1 if the specified err message was cut off
-bool printError(int errnoIn)
-{
-	std::vector<char> errorMessageBuffer{};
-	// I'm currently hardcoding the err buffer to 32, because Visual Studio doesn't have an implementation of strerrorlen_s to properly check the length of the message.
-	errorMessageBuffer.resize(32);
-	// Get the message and store it in errorMessageBuffer, recording whether the message got cut off
-	bool fullMessageGotten = strerror_s(errorMessageBuffer.data(), 32, errno);
-	std::cerr << std::string(errorMessageBuffer.data());
-	return fullMessageGotten;
-}
 
 void setSoundFileName(std::string fileName)
 {
@@ -121,7 +110,7 @@ void EmptySpace(long long offset, long long size)
 	std::rename("temp.brsar", brsarName.c_str());
 }
 
-int readint()
+int orig_readint()
 {
 	int a, b, c, d;
 	a = Orig.get();
@@ -131,7 +120,7 @@ int readint()
 	return a * 256 * 256 * 256 + b * 256 * 256 + c * 256 + d;
 }
 
-int readintc()
+int copy_readintc()
 {
 	int a, b, c, d;
 	a = Copy.get();
@@ -141,13 +130,13 @@ int readintc()
 	return a * 256 * 256 * 256 + b * 256 * 256 + c * 256 + d;
 }
 
-void go(int a)
+void orig_go(int a)
 {
 	Orig.seekg(a);
 	Orig.seekp(a);
 }
 
-void writeint(int a)
+void orig_writeint(int a)
 {
 	Orig.seekp(Orig.tellg());
 	Orig.put(a >> 24);
@@ -156,7 +145,7 @@ void writeint(int a)
 	Orig.put(a);
 }
 
-void writeintc(int a)
+void copy_writeintc(int a)
 {
 	Copy.put(a >> 24);
 	Copy.put(a >> 16);
@@ -184,41 +173,41 @@ void SawndInsert2()
 	if (!Copy.good())
 	{
 		printf("Error Opening sawnd.sawnd\n");
-		printError(errno);
+		lava::printError(errno);
 		return;
 	}
 	Copy.seekg(1);
-	groupe = readintc();
+	groupe = copy_readintc();
 	printf("target group: %d\n", groupe);
 	Copy.seekg(5);
-	total_size = readintc();
+	total_size = copy_readintc();
 	// Find the group data.
 	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	if (!Orig.good())
 	{
 		printf("Error Opening brsar file: %s\n", brsarName);
-		printError(errno);
+		lava::printError(errno);
 		return;
 	}
 	Orig.seekg(24);
-	address = readint();
+	address = orig_readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
 	Orig.seekg(relocation_address, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	// Read number of entries
 	Orig.seekg(info_address + 8 + address, std::ios::beg);
-	group_num = readint();
+	group_num = orig_readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
 		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		Orig.seekg(info_address + 8 + address, std::ios::beg);
-		grid = readint();
+		grid = orig_readint();
 		if (grid == groupe)
 		{
 			grak = i;
@@ -236,83 +225,83 @@ void SawndInsert2()
 		Sleep(4000);
 		return;
 	}
-	go(group_offset + 16);
-	base_rwsd = readint();
-	go(group_offset + 28);
-	old_size = readint();
+	orig_go(group_offset + 16);
+	base_rwsd = orig_readint();
+	orig_go(group_offset + 28);
+	old_size = orig_readint();
 	size_difference = total_size - old_size;
 	// Pick the collection relocation group address
-	go(info_address + 36);
-	address = readint();
+	orig_go(info_address + 36);
+	address = orig_readint();
 	collect_rel = info_address + 8 + address;
 	// -------MODIFYING-------
 	// First, collections as subgroups and collections.
-	go(group_offset + 36);
-	address = readint();
+	orig_go(group_offset + 36);
+	address = orig_readint();
 	col_rel = address + info_address + 8;
-	go(col_rel);
-	col_num = readint();
+	orig_go(col_rel);
+	col_num = orig_readint();
 	printf("Modifying Collections\n");
 	for (int i = 0; i < col_num; i++)
 	{
 		Copy.seekg(17 + 12 * i);
-		l2 = readintc();
+		l2 = copy_readintc();
 		Copy.seekg(13 + 12 * i);
-		o2 = readintc();
+		o2 = copy_readintc();
 
-		go(col_rel + 8 + 8 * i);
-		address = readint();
-		go(info_address + 8 + address);
-		col_id = readint();
-		go(collect_rel + 8 + 8 * col_id);
-		address = readint();
-		go(info_address + 8 + address + 4);
-		writeint(l2);
+		orig_go(col_rel + 8 + 8 * i);
+		address = orig_readint();
+		orig_go(info_address + 8 + address);
+		col_id = orig_readint();
+		orig_go(collect_rel + 8 + 8 * col_id);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 4);
+		orig_writeint(l2);
 
-		go(col_rel + 8 * i + 8);
-		address = readint();
-		go(info_address + 8 + address + 12);
-		writeint(o2);
-		go(info_address + 8 + address + 16);
-		writeint(l2);
+		orig_go(col_rel + 8 * i + 8);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 12);
+		orig_writeint(o2);
+		orig_go(info_address + 8 + address + 16);
+		orig_writeint(l2);
 	}
 	// Second, in the RSAR header.
 	Orig.seekg(36, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	address += size_difference;
 	Orig.seekg(36, std::ios::beg);
-	writeint(address);
+	orig_writeint(address);
 	printf("Modifying Groups\n");
 	// Now groups.
 	for (int i = grak + 1; i < group_num; i++)
 	{
-		go(grprel_baseoff + i * 8);
-		address = readint();
-		go(info_address + 8 + address + 16);
-		samples = readint();
+		orig_go(grprel_baseoff + i * 8);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 16);
+		samples = orig_readint();
 		samples += size_difference;
-		go(info_address + 8 + address + 16);
-		writeint(samples);
-		go(info_address + 8 + address + 24);
-		samples = readint();
+		orig_go(info_address + 8 + address + 16);
+		orig_writeint(samples);
+		orig_go(info_address + 8 + address + 24);
+		samples = orig_readint();
 		samples += size_difference;
-		go(info_address + 8 + address + 24);
-		writeint(samples);
+		orig_go(info_address + 8 + address + 24);
+		orig_writeint(samples);
 	}
 	// The group itself.
-	go(group_offset + 28);
-	samples = readint();
+	orig_go(group_offset + 28);
+	samples = orig_readint();
 	samples += size_difference;
-	go(group_offset + 28);
-	writeint(samples);
+	orig_go(group_offset + 28);
+	orig_writeint(samples);
 	// Modify stuff after FILE header.
-	go(32);
-	address = readint();
-	go(address + 4);
-	samples = readint();
+	orig_go(32);
+	address = orig_readint();
+	orig_go(address + 4);
+	samples = orig_readint();
 	samples += size_difference;
-	go(address + 4);
-	writeint(samples);
+	orig_go(address + 4);
+	orig_writeint(samples);
 	// Data copy.
 	printf("Copying\n");
 	Copy.close();
@@ -348,31 +337,31 @@ void SawndInsert1()
 
 	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary);
 	Copy.seekg(1);
-	groupe = readintc();
+	groupe = copy_readintc();
 	printf("target group: %d\n", groupe);
 	Copy.seekg(5);
-	total_size = readintc();
+	total_size = copy_readintc();
 	// Find the group data.
 	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	Orig.seekg(24);
-	address = readint();
+	address = orig_readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
 	Orig.seekg(relocation_address, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	// Read number of entries
 	Orig.seekg(info_address + 8 + address, std::ios::beg);
-	group_num = readint();
+	group_num = orig_readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
 		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		Orig.seekg(info_address + 8 + address, std::ios::beg);
-		grid = readint();
+		grid = orig_readint();
 		if (grid == groupe)
 		{
 			grak = i;
@@ -390,81 +379,81 @@ void SawndInsert1()
 		Sleep(4000);
 		return;
 	}
-	go(group_offset + 16);
-	base_rwsd = readint();
-	go(group_offset + 28);
-	old_size = readint();
+	orig_go(group_offset + 16);
+	base_rwsd = orig_readint();
+	orig_go(group_offset + 28);
+	old_size = orig_readint();
 	size_difference = total_size - old_size;
 	// Pick the collection relocation group address
-	go(info_address + 36);
-	address = readint();
+	orig_go(info_address + 36);
+	address = orig_readint();
 	collect_rel = info_address + 8 + address;
 	// -------MODIFYING-------
 	// First, collections as subgroups and collections.
-	go(group_offset + 36);
-	address = readint();
+	orig_go(group_offset + 36);
+	address = orig_readint();
 	col_rel = address + info_address + 8;
-	go(col_rel);
-	col_num = readint();
+	orig_go(col_rel);
+	col_num = orig_readint();
 	for (int i = 0; i < col_num; i++)
 	{
 		Copy.seekg(17 + 12 * i);
-		l2 = readintc();
+		l2 = copy_readintc();
 		Copy.seekg(13 + 12 * i);
-		o2 = readintc();
+		o2 = copy_readintc();
 
-		go(col_rel + 8 + 8 * i);
-		address = readint();
-		go(info_address + 8 + address);
-		col_id = readint();
-		go(collect_rel + 8 + 8 * col_id);
-		address = readint();
-		go(info_address + 8 + address + 4);
-		writeint(l2);
+		orig_go(col_rel + 8 + 8 * i);
+		address = orig_readint();
+		orig_go(info_address + 8 + address);
+		col_id = orig_readint();
+		orig_go(collect_rel + 8 + 8 * col_id);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 4);
+		orig_writeint(l2);
 
-		go(col_rel + 8 * i + 8);
-		address = readint();
-		go(info_address + 8 + address + 12);
-		writeint(o2);
-		go(info_address + 8 + address + 16);
-		writeint(l2);
+		orig_go(col_rel + 8 * i + 8);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 12);
+		orig_writeint(o2);
+		orig_go(info_address + 8 + address + 16);
+		orig_writeint(l2);
 	}
 	// Second, in the RSAR header.
 	Orig.seekg(36, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	address += size_difference;
 	Orig.seekg(36, std::ios::beg);
-	writeint(address);
+	orig_writeint(address);
 	// Now groups.
 	for (int i = grak + 1; i < group_num; i++)
 	{
-		go(grprel_baseoff + i * 8);
-		address = readint();
-		go(info_address + 8 + address + 16);
-		samples = readint();
+		orig_go(grprel_baseoff + i * 8);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 16);
+		samples = orig_readint();
 		samples += size_difference;
-		go(info_address + 8 + address + 16);
-		writeint(samples);
-		go(info_address + 8 + address + 24);
-		samples = readint();
+		orig_go(info_address + 8 + address + 16);
+		orig_writeint(samples);
+		orig_go(info_address + 8 + address + 24);
+		samples = orig_readint();
 		samples += size_difference;
-		go(info_address + 8 + address + 24);
-		writeint(samples);
+		orig_go(info_address + 8 + address + 24);
+		orig_writeint(samples);
 	}
 	// The group itself.
-	go(group_offset + 28);
-	samples = readint();
+	orig_go(group_offset + 28);
+	samples = orig_readint();
 	samples += size_difference;
-	go(group_offset + 28);
-	writeint(samples);
+	orig_go(group_offset + 28);
+	orig_writeint(samples);
 	// Modify stuff after FILE header.
-	go(32);
-	address = readint();
-	go(address + 4);
-	samples = readint();
+	orig_go(32);
+	address = orig_readint();
+	orig_go(address + 4);
+	samples = orig_readint();
 	samples += size_difference;
-	go(address + 4);
-	writeint(samples);
+	orig_go(address + 4);
+	orig_writeint(samples);
 	// Data copy.
 	Copy.close();
 	Orig.close();
@@ -517,42 +506,42 @@ void SawndCreate(long long group)
 	long long size_difference;
 	int o;
 
-	Copy.open("sawnd.sawnd", std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+	Copy.open("sawnd.sawnd", std::ios::out | std::ios::binary);
 	if (!Copy.good())
 	{
 		printf("Error creating sawnd.sawnd\n");
-		printError(errno);
+		lava::printError(errno);
 		return;
 	}
 	Copy.put(2);
-	writeintc(group);
+	copy_writeintc(group);
 	// Find the group data.
 	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	if (!Orig.good())
 	{
 		printf("Error Opening BRSAR %s\n", brsarName);
-		printError(errno);
+		lava::printError(errno);
 		return;
 	}
 	Orig.seekg(24);
-	address = readint();
+	address = orig_readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
 	Orig.seekg(relocation_address, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	// Read number of entries
 	Orig.seekg(info_address + 8 + address, std::ios::beg);
-	group_num = readint();
+	group_num = orig_readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
 		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		Orig.seekg(info_address + 8 + address, std::ios::beg);
-		grid = readint();
+		grid = orig_readint();
 		if (grid == group)
 		{
 			printf("%d\n", grid);
@@ -569,36 +558,55 @@ void SawndCreate(long long group)
 		Sleep(4000);
 		return;
 	}
-	go(group_offset + 16);
-	base_rwsd = readint();
-	go(group_offset + 20);
+	std::cout << "Grp.Off(0x" << lava::numToHexStringWithPadding(group_offset, 8) << ")\n";
+	orig_go(group_offset + 0x10);
+	base_rwsd = orig_readint();
+	orig_go(group_offset + 0x14);
 	total_size = 0;
-	total_size += readint();
-	go(group_offset + 28);
-	total_size += readint();
-	go(group_offset + 28);
-	samples = readint();
-	writeintc(samples);
-	go(group_offset + 36);
-	address = readint();
-	col_rel = info_address + 8 + address;
-	go(col_rel);
-	col_num = readint();
+	total_size += orig_readint();
+	orig_go(group_offset + 0x1C);
+	total_size += orig_readint();
+	orig_go(group_offset + 0x1C);
+	samples = orig_readint();
+	std::cout << "Samples(0x" << lava::numToHexStringWithPadding(samples, 8) << ")\n";
+	copy_writeintc(samples);
+	orig_go(group_offset + 0x24);
+	address = orig_readint();
+	std::cout << "Address(0x" << lava::numToHexStringWithPadding(address, 8) << ")\n";
+	col_rel = info_address + 0x8 + address;
+	orig_go(col_rel);
+	col_num = orig_readint();
+	int bufferNum = INT_MAX;
 	for (int i = 0; i < col_num; i++)
 	{
-		go(col_rel + 8 + i * 8);
-		address = readint();
-		go(info_address + 8 + address);
-		samples = readint();
-		writeintc(samples);
-		go(info_address + 8 + address + 12);
-		samples = readint();
-		writeintc(samples);
-		go(info_address + 8 + address + 16);
-		samples = readint();
-		writeintc(samples);
+		bufferNum = col_rel + 8 + (i * 8);
+		std::cout << "Collection #" << i << " (0x" << lava::numToHexStringWithPadding(bufferNum, 8) << "), Address_Val(0x" << lava::numToHexStringWithPadding(address, 8) << ")\n";
+		orig_go(bufferNum);
+		address = orig_readint();
+		bufferNum = info_address + 8 + address;
+		orig_go(bufferNum);
+		samples = orig_readint();
+		std::cout << "\tVal[0]: Buffer_Val(0x" <<
+			lava::numToHexStringWithPadding(bufferNum, 8) << "), Samples_Val(0x"<< 
+			lava::numToHexStringWithPadding(samples, 8) << "), Address_Val(0x" << 
+			lava::numToHexStringWithPadding(address, 8) << ")\n";
+		copy_writeintc(samples);
+		bufferNum = info_address + 8 + address + 0xC;
+		orig_go(bufferNum);
+		samples = orig_readint();
+		std::cout << "\tVal[1]: Buffer_Val(0x" <<
+			lava::numToHexStringWithPadding(bufferNum, 8) << "), Samples_Val(0x" <<
+			lava::numToHexStringWithPadding(samples, 8) << ")\n";
+		copy_writeintc(samples);
+		bufferNum = info_address + 8 + address + 0x10;
+		orig_go(bufferNum);
+		samples = orig_readint();
+		std::cout << "\tVal[2]: Buffer_Val(0x" <<
+			lava::numToHexStringWithPadding(bufferNum, 8) << "), Samples_Val(0x" <<
+			lava::numToHexStringWithPadding(samples, 8) << ")\n";
+		copy_writeintc(samples);
 	}
-	go(base_rwsd);
+	orig_go(base_rwsd);
 	printf("Size: %lld\n", total_size);
 	Sleep(500);
 	for (long long i = 0; i < total_size; i++)
@@ -622,24 +630,24 @@ void Hex(long long group)
 
 	Orig.open(brsarName, std::ios::in | std::ios::out | std::ios::binary);
 	Orig.seekg(24);
-	address = readint();
+	address = orig_readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
 	Orig.seekg(relocation_address, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	// Read number of entries
 	Orig.seekg(info_address + 8 + address, std::ios::beg);
-	group_num = readint();
+	group_num = orig_readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
 		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		Orig.seekg(info_address + 8 + address, std::ios::beg);
-		grid = readint();
+		grid = orig_readint();
 		if (grid == group)
 		{
 			printf("%d\n", grid);
@@ -655,7 +663,7 @@ void Hex(long long group)
 		return;
 	}
 	Orig.seekg(group_offset + 16);
-	base_rwsd = readint();
+	base_rwsd = orig_readint();
 
 	Copy.open("hex.hex", std::ios::in | std::ios::out | std::ios::binary);
 	Copy.seekg(0, std::ios::end);
@@ -718,30 +726,30 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	if (!Orig.good())
 	{
 		printf("Error Opening BRSAR\n");
-		printError(errno);
+		lava::printError(errno);
 		return;
 	}
 
 	// Get the offset of INFO header.
 	Orig.seekg(24);
-	address = readint();
+	address = orig_readint();
 	info_address = address;
 	relocation_address = info_address + 44;
 	// Go to the offset to Group Relocation Group (relative to 0x08 in INFO Header)
 	Orig.seekg(relocation_address, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	// Read number of entries
 	Orig.seekg(info_address + 8 + address, std::ios::beg);
-	group_num = readint();
+	group_num = orig_readint();
 	grprel_baseoff = info_address + address + 16;
 	// Find the group.
 	grid = -1;
 	for (int i = 0; i < group_num; i++)
 	{
 		Orig.seekg(grprel_baseoff + i * 8, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		Orig.seekg(info_address + 8 + address, std::ios::beg);
-		grid = readint();
+		grid = orig_readint();
 		if (grid == group)
 		{
 			grak = i;
@@ -758,14 +766,14 @@ void Insert(long long group, long long collection, long long wave, int frequency
 		return;
 	}
 	Orig.seekg(group_offset + 16);
-	base_rwsd = readint();
+	base_rwsd = orig_readint();
 	Orig.seekg(group_offset + 24);
-	base_data = readint();
+	base_data = orig_readint();
 	// Get the number of subgroups belonging to the group.
 	Orig.seekg(group_offset + 36, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	Orig.seekg(info_address + 8 + address, std::ios::beg);
-	col_num = readint();
+	col_num = orig_readint();
 	if (col_num <= 0)
 	{
 		printf("ERROR: The group has no collections.\nProcess stopped, no changes were done to brsar, you may use it again without loading backup.");
@@ -779,9 +787,9 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	for (int i = 0; i < col_num; i++)
 	{
 		Orig.seekg(col_rel + 8 * i, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		Orig.seekg(info_address + 8 + address, std::ios::beg);
-		col_id = readint();
+		col_id = orig_readint();
 		if (col_id == collection)
 		{
 			col_ide = i;
@@ -798,21 +806,21 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	// Pick the data from the subgroup.
 	col_offset = info_address + 8 + address;
 	Orig.seekg(col_offset + 4);
-	rwsd_offset = readint();
+	rwsd_offset = orig_readint();
 	Orig.seekg(col_offset + 8);
-	rwsd_length = readint();
+	rwsd_length = orig_readint();
 	Orig.seekg(col_offset + 12);
-	data_offset = readint();
+	data_offset = orig_readint();
 	Orig.seekg(col_offset + 16);
-	data_length = readint();
+	data_length = orig_readint();
 	// Find the WAVE header.
 	Orig.seekg(base_rwsd + rwsd_offset + 24);
 	printf("%lld\n", rwsd_offset);
-	address = readint();
+	address = orig_readint();
 	WAVE_offset = base_rwsd + rwsd_offset + address;
 	// Count WAVEs.
 	Orig.seekg(WAVE_offset + 8);
-	wave_num = readint();
+	wave_num = orig_readint();
 	if (wave_num < wave)
 	{
 		printf("ERROR: The chosen wave doesn't exist in the subgroup.\nProcess stopped, no changes were done to brsar, you may use it again without loading backup.");
@@ -822,13 +830,13 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	}
 	// Get to the Wave data itself.
 	Orig.seekg(WAVE_offset + 12 + wave * 4);
-	address = readint();
+	address = orig_readint();
 	wave_offset = WAVE_offset + address;
 	// Now, pick the number of samples.
 	// Single byte of data contains 2 samples.
 	// Samples number divided by 2 and rounded up next is the byte number.
 	Orig.seekg(wave_offset + 12);
-	samples = readint();
+	samples = orig_readint();
 	if ((samples / 2 * 2) == samples)
 	{
 		old_size = samples / 2;
@@ -851,7 +859,7 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	printf("size difference: %lld\n", size_difference);
 	org_size_difference = size_difference;
 	Orig.seekg(wave_offset + 20);
-	address = readint() + base_data + data_offset;
+	address = orig_readint() + base_data + data_offset;
 	Orig.close();
 	if (size_difference < 0)
 		RemoveSpace(address, -size_difference);
@@ -868,100 +876,100 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	// First, in the RSAR header.
 	//printf("Modifying RSAR header\n");
 	Orig.seekg(36, std::ios::beg);
-	address = readint();
+	address = orig_readint();
 	address += size_difference;
 	Orig.seekg(36, std::ios::beg);
-	writeint(address);
+	orig_writeint(address);
 
 	// Now, onto collections.
 	//printf("Modifying Collection\n");
 	Orig.seekg(info_address + 36);
-	address = readint();
+	address = orig_readint();
 	Orig.seekg(info_address + address + 16 + collection * 8);
-	address = readint();
+	address = orig_readint();
 	Orig.seekg(info_address + address + 12);
-	samples = readint();
+	samples = orig_readint();
 	samples += size_difference;
 	Orig.seekg(info_address + address + 12);
-	writeint(samples);
+	orig_writeint(samples);
 	// Now groups.
    // printf("Looking for group\n");
 	for (int i = grak + 1; i < group_num; i++)
 	{
-		go(grprel_baseoff + i * 8);
-		address = readint();
-		go(info_address + 8 + address + 16);
-		samples = readint();
+		orig_go(grprel_baseoff + i * 8);
+		address = orig_readint();
+		orig_go(info_address + 8 + address + 16);
+		samples = orig_readint();
 		samples += size_difference;
-		go(info_address + 8 + address + 16);
-		writeint(samples);
-		go(info_address + 8 + address + 24);
-		samples = readint();
+		orig_go(info_address + 8 + address + 16);
+		orig_writeint(samples);
+		orig_go(info_address + 8 + address + 24);
+		samples = orig_readint();
 		samples += size_difference;
-		go(info_address + 8 + address + 24);
-		writeint(samples);
+		orig_go(info_address + 8 + address + 24);
+		orig_writeint(samples);
 	}
 	// The group itself.
    // printf("Modifying Group\n");
-	go(group_offset + 28);
-	samples = readint();
+	orig_go(group_offset + 28);
+	samples = orig_readint();
 	samples += size_difference;
-	go(group_offset + 28);
-	writeint(samples);
+	orig_go(group_offset + 28);
+	orig_writeint(samples);
 	// The collection.
    // printf("Modifying Collection\n");
-	go(col_offset + 16);
-	samples = readint();
+	orig_go(col_offset + 16);
+	samples = orig_readint();
 	samples += size_difference;
-	go(col_offset + 16);
-	writeint(samples);
+	orig_go(col_offset + 16);
+	orig_writeint(samples);
 	// The other collections.
 	for (int i = col_ide + 1; i < col_num; i++)
 	{
 		Orig.seekg(col_rel + 8 * i, std::ios::beg);
-		address = readint();
+		address = orig_readint();
 		address += info_address + 8;
 
-		go(address + 4);
-		samples = readint();
+		orig_go(address + 4);
+		samples = orig_readint();
 		samples += size_difference;
-		go(address + 4);
+		orig_go(address + 4);
 		//writeint(samples);
-		go(address + 12);
-		samples = readint();
+		orig_go(address + 12);
+		samples = orig_readint();
 		samples += size_difference;
-		go(address + 12);
-		writeint(samples);
+		orig_go(address + 12);
+		orig_writeint(samples);
 	}
 	// WAVE.
    // printf("Modifying Wav Header\n");
 	size_difference = org_size_difference;
 	for (int i = 0; i < wave_num; i++)
 	{
-		go(WAVE_offset + 12 + i * 4);
-		address = readint();
+		orig_go(WAVE_offset + 12 + i * 4);
+		address = orig_readint();
 		if (i == basewave)
 		{
 			basewave_offset = WAVE_offset + address;
 		}
 		if (i < wave + 1) continue;
-		go(WAVE_offset + address + 20);
-		samples = readint();
+		orig_go(WAVE_offset + address + 20);
+		samples = orig_readint();
 		samples += size_difference;
-		go(WAVE_offset + address + 20);
-		writeint(samples);
+		orig_go(WAVE_offset + address + 20);
+		orig_writeint(samples);
 	}
 	// Paste the sound data.
 
 	Orig.seekp(wave_offset + 20);
-	samples = readint();
+	samples = orig_readint();
 	mydata = samples;
 	Orig.seekp(base_data + data_offset + samples);
 	Copy.open(spdFile, std::ios::in | std::ios::out | std::ios::binary);
 	if (!Copy.good())
 	{
 		printf("Error Opening sawnd.spd\n");
-		printError(errno);
+		lava::printError(errno);
 		return;
 	}
 	//  printf("Opened Sawnd.spd\n");
@@ -1006,29 +1014,29 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	{
 		//printf("basewave %d\nbasewave %lld\n    wave %lld\n",basewave,basewave_offset,wave_offset);
 		//Sleep(2000);
-		go(basewave_offset);
+		orig_go(basewave_offset);
 		Orig.read(data, 108);
-		go(wave_offset);
+		orig_go(wave_offset);
 		Orig.write(data, 108);
-		go(wave_offset + 20);
-		writeint(mydata);
+		orig_go(wave_offset + 20);
+		orig_writeint(mydata);
 	}
 	delete[] data;
 	// WAVE parameters.
-	go(wave_offset + 2);
+	orig_go(wave_offset + 2);
 	if (loop)
 		Orig.put(0);
 	else
 		Orig.put(1);
-	go(wave_offset + 3);
+	orig_go(wave_offset + 3);
 	printf("wave %lld\n", wave_offset);
 	Sleep(2000);
 	Orig.seekp(wave_offset + 3);
 	Orig.put(frequency >> 16);
 	Orig.put(frequency >> 8);
 	Orig.put(frequency);
-	go(wave_offset + 12);
-	writeint(new_size * 2);
+	orig_go(wave_offset + 12);
+	orig_writeint(new_size * 2);
 	// Paste the fix.
 	Orig.seekp(wave_offset + 60);
 	Copy.open(sptFile, std::ios::in | std::ios::out | std::ios::binary);
@@ -1050,13 +1058,13 @@ void Insert(long long group, long long collection, long long wave, int frequency
 	delete[] data;
 	Copy.close();
 	// Modify stuff after FILE header.
-	go(32);
-	address = readint();
-	go(address + 4);
-	samples = readint();
+	orig_go(32);
+	address = orig_readint();
+	orig_go(address + 4);
+	samples = orig_readint();
 	samples += size_difference;
-	go(address + 4);
-	writeint(samples);
+	orig_go(address + 4);
+	orig_writeint(samples);
 
 	Orig.close();
 	printf("Done.");
@@ -1174,6 +1182,9 @@ int main(int argc, char** argv)
 				if (argc == 4)
 					brsarName = argv[3];
 				SawndCreate(arg[0]);
+				lava::sawndz::brsarFile testBrsar;
+				testBrsar.init(brsarName);
+				testBrsar.exportSawnd(arg[0], "test.sawnd");
 				return 0;
 			}
 			if (strcmp("sawnd", argv[1]) == 0)
@@ -1193,7 +1204,7 @@ int main(int argc, char** argv)
 		std::cerr << "EXCEPTION: ";
 		if (errno)
 		{
-			printError(errno);
+			lava::printError(errno);
 		}
 		std::cerr << e.what();
 		Sleep(1000);
