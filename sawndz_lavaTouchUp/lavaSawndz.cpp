@@ -441,7 +441,7 @@ namespace lava
 		}
 
 
-		bool groupInfo::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		bool collectionInfo::populate(lava::byteArray& bodyIn, std::size_t addressIn)
 		{
 			bool result = 0;
 
@@ -459,7 +459,7 @@ namespace lava
 
 			return result;
 		}
-		bool groupInfo::exportContents(std::ostream& destinationStream)
+		bool collectionInfo::exportContents(std::ostream& destinationStream)
 		{
 			bool result = 0;
 			if (destinationStream.good())
@@ -528,14 +528,14 @@ namespace lava
 				symb_types_offset = bodyIn.getLong(address + 0x10);
 				symb_group_offset = bodyIn.getLong(address + 0x14);
 				symb_banks_offset = bodyIn.getLong(address + 0x18);
-				symb_string_count = bodyIn.getLong(address + 0x1C);
 
-				stringOffsets.resize(symb_string_count, ULONG_MAX);
-				unsigned long cursor = address + 0x08 + symb_string_offset + 0x04;
-				for (std::size_t i = 0; i < symb_string_count; i++)
+				unsigned long cursor = address + 0x08 + symb_string_offset;
+				stringOffsets.resize(bodyIn.getLong(cursor), ULONG_MAX);
+				cursor += 0x04;
+				for (std::size_t i = 0; i < stringOffsets.size(); i++)
 				{
 					stringOffsets[i] = bodyIn.getLong(cursor);
-					cursor += 0x4;
+					cursor += 0x04;
 				}
 			}
 
@@ -556,6 +556,7 @@ namespace lava
 
 				symbAddress = contents.getLong(0x10);
 				symbLength = contents.getLong(0x14);
+				symbSection.populate(contents, symbAddress);
 
 				infoAddress = contents.getLong(0x18);
 				infoLength = contents.getLong(0x1C);
@@ -611,12 +612,13 @@ namespace lava
 				unsigned long stringOffset = ULONG_MAX;
 				unsigned long stringAddress = ULONG_MAX;
 				unsigned long stringOffsetAddress = symbSection.address + 0x08 + symbSection.symb_string_offset + 0x04;
-				for (std::size_t i = 0; i < symbSection.symb_string_count; i++)
+				for (std::size_t i = 0; i < symbSection.stringOffsets.size(); i++)
 				{
 					stringOffset = symbSection.stringOffsets[i];
 					stringAddress = symbSection.address + stringOffset + 0x08;
 					char* ptr = contents.body.data() + stringAddress;
 					output << "[0x" << lava::numToHexStringWithPadding(i, 4) << "] 0x" << lava::numToHexStringWithPadding(stringOffsetAddress, 4) << "->0x" << lava::numToHexStringWithPadding(stringAddress, 4) << ": " << ptr << "\n";
+					stringOffsetAddress += 0x04;
 				}
 
 			}
@@ -657,15 +659,15 @@ namespace lava
 					collectionReferences.populate(contents, collectionRefListAddress);
 					std::cout << "Collection List Address(0x" << lava::numToHexStringWithPadding(collectionRefListAddress, 8) << ")\n";
 					std::cout << "Collection Count: " << collectionReferences.refs.size() << "\n";
-					std::vector<groupInfo> groupInfoEntries;
-					groupInfo* currEntry = nullptr;
+					std::vector<collectionInfo> groupInfoEntries;
+					collectionInfo* currEntry = nullptr;
 					std::size_t currentCollectionAddress = SIZE_MAX;
 
 					for (std::size_t i = 0; i < collectionReferences.refs.size(); i++)
 					{
 						currentCollectionAddress = collectionReferences.refs[i].getAddress(infoAddress + 0x08);
 						std::cout << "Collection #" << i << ": Info Section Offset = 0x" << lava::numToHexStringWithPadding(currentCollectionAddress, 8) << "\n";
-						groupInfoEntries.push_back(groupInfo());
+						groupInfoEntries.push_back(collectionInfo());
 						currEntry = &groupInfoEntries.back();
 						currEntry->populate(contents, currentCollectionAddress);
 

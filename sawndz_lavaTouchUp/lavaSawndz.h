@@ -175,7 +175,7 @@ namespace lava
 			bool exportContents(std::string destinationFile);
 		};
 
-		struct groupInfo
+		struct collectionInfo
 		{
 			unsigned long address = ULONG_MAX;
 
@@ -207,40 +207,41 @@ namespace lava
 			bool exportContents(std::ostream& destinationStream);
 		};
 
-		/*struct symbMaskStruct
+		/*struct symbMaskEntry
+		{
+			unsigned short flags = USHRT_MAX;
+			unsigned short bit = USHRT_MAX;
+			unsigned long leftID = ULONG_MAX;
+			unsigned long rightID = ULONG_MAX;
+			unsigned long stringID = ULONG_MAX;
+			unsigned long index = ULONG_MAX;
+			bool populate(lava::byteArray& bodyIn, unsigned long addressIn)
 			{
-				std::size_t offset = SIZE_MAX;
-				std::size_t rootID = SIZE_MAX;
-				std::size_t numEntries = SIZE_MAX;
+				bool result = 0;
 
-				struct sMS_Entry
+				if (bodyIn.populated())
 				{
-					union
-					{
-						std::size_t full = SIZE_T;
-						unsigned short split[2];
-					} fbUnion;
-					std::size_t leftID = SIZE_MAX;
-					std::size_t rightID = SIZE_MAX;
-					std::size_t stringID = SIZE_MAX;
-					std::size_t index = SIZE_MAX;
-					sMS_Entry(std::size_t addressIn)
-					{
-						std::size_t numGotten = 0;
-						fbUnion.full = readIntFromContents(addressIn, numGotten);
+					std::size_t numGotten = 0;
+				}
 
+				return result;
+			}
+		};
 
-					}
-				};
-				std::vector<sMS_Entry> entries{};
-			};*/
+		struct symbMask
+		{
+			unsigned long address = ULONG_MAX;
+			unsigned long rootID = ULONG_MAX;
+			unsigned long numEntries = ULONG_MAX;
+
+			
+			std::vector<symbMaskEntry> entries{};
+		};*/
 
 		struct brsarSymbSection
 		{
-			brsarFile* parent = nullptr;
 			unsigned int address = ULONG_MAX;
 
-			std::size_t symb_string_count = SIZE_MAX;
 			std::size_t symb_string_offset = SIZE_MAX;
 			std::size_t symb_sound_offset = SIZE_MAX;
 			std::size_t symb_types_offset = SIZE_MAX;
