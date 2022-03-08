@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lavaByteArray.cpp" />
     <ClCompile Include="lavaMPRUtility.cpp" />
     <ClCompile Include="lavaSawndz.cpp" />
     <ClCompile Include="main.cpp" />
@@ -147,6 +148,7 @@
     <Text Include="Notes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lavaByteArray.h" />
     <ClInclude Include="lavaMPRUtility.h" />
     <ClInclude Include="lavaSawndz.h" />
   </ItemGroup>
