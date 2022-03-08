@@ -207,10 +207,64 @@ namespace lava
 			bool exportContents(std::ostream& destinationStream);
 		};
 
+		/*struct symbMaskStruct
+			{
+				std::size_t offset = SIZE_MAX;
+				std::size_t rootID = SIZE_MAX;
+				std::size_t numEntries = SIZE_MAX;
+
+				struct sMS_Entry
+				{
+					union
+					{
+						std::size_t full = SIZE_T;
+						unsigned short split[2];
+					} fbUnion;
+					std::size_t leftID = SIZE_MAX;
+					std::size_t rightID = SIZE_MAX;
+					std::size_t stringID = SIZE_MAX;
+					std::size_t index = SIZE_MAX;
+					sMS_Entry(std::size_t addressIn)
+					{
+						std::size_t numGotten = 0;
+						fbUnion.full = readIntFromContents(addressIn, numGotten);
+
+
+					}
+				};
+				std::vector<sMS_Entry> entries{};
+			};*/
+
+		struct brsarSymbSection
+		{
+			brsarFile* parent = nullptr;
+			unsigned int address = ULONG_MAX;
+
+			std::size_t symb_string_count = SIZE_MAX;
+			std::size_t symb_string_offset = SIZE_MAX;
+			std::size_t symb_sound_offset = SIZE_MAX;
+			std::size_t symb_types_offset = SIZE_MAX;
+			std::size_t symb_group_offset = SIZE_MAX;
+			std::size_t symb_banks_offset = SIZE_MAX;
+
+			std::vector<unsigned long> stringOffsets{};
+
+			bool populate(lava::byteArray& bodyIn, std::size_t address);
+		};
 
 		struct brsarFile
 		{
-			std::size_t info_address = SIZE_MAX;
+			// Header Data
+			std::size_t symbAddress = SIZE_MAX;
+			std::size_t symbLength = SIZE_MAX;
+			brsarSymbSection symbSection;
+
+			std::size_t infoAddress = SIZE_MAX;
+			std::size_t infoLength = SIZE_MAX;
+
+			std::size_t fileAddress = SIZE_MAX;
+			std::size_t fileLength = SIZE_MAX;
+
 			std::size_t relocation_address = SIZE_MAX;
 			std::size_t group_num = SIZE_MAX;
 			std::size_t grprel_baseoff = SIZE_MAX;
@@ -219,8 +273,9 @@ namespace lava
 
 			lava::byteArray contents;
 			bool init(std::string filePathIn);
-			std::size_t readIntFromContents(std::size_t offsetIn, std::size_t& numGotten);
 			std::size_t getGroupOffset(std::size_t groupIDIn, std::size_t* grakOut = nullptr);
+
+			bool summarizeSymbStringData(std::ostream& output = std::cout);
 
 			bool exportSawnd(std::size_t groupID, std::string targetFilePath = "sawnd.sawnd");
 		};

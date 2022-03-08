@@ -515,6 +515,34 @@ namespace lava
 			return result;
 		}
 
+		bool brsarSymbSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				symb_string_offset = bodyIn.getLong(address + 0x08);
+				symb_sound_offset = bodyIn.getLong(address + 0x0C);
+				symb_types_offset = bodyIn.getLong(address + 0x10);
+				symb_group_offset = bodyIn.getLong(address + 0x14);
+				symb_banks_offset = bodyIn.getLong(address + 0x18);
+				symb_string_count = bodyIn.getLong(address + 0x1C);
+
+				stringOffsets.resize(symb_string_count, ULONG_MAX);
+				unsigned long cursor = address + 0x08 + symb_string_offset + 0x04;
+				for (std::size_t i = 0; i < symb_string_count; i++)
+				{
+					stringOffsets[i] = bodyIn.getLong(cursor);
+					cursor += 0x4;
+				}
+			}
+
+			return result;
+		}
+
+
 		bool brsarFile::init(std::string filePathIn)
 		{
 			bool result = 0;
@@ -525,18 +553,24 @@ namespace lava
 				result = 1;
 				contents.populate(fileIn);
 				std::size_t tempNumber = 0;
-				std::size_t numGotten = 0;
-				info_address = lava::hexVecToNum(contents.getBytes(4, 0x18, numGotten));
-				relocation_address = info_address + 0x2C;
-				tempNumber = lava::hexVecToNum(contents.getBytes(4, relocation_address, numGotten));
-				group_num = lava::hexVecToNum(contents.getBytes(4, info_address + 0x8 + tempNumber, numGotten));
-				grprel_baseoff = info_address + 0x10 + tempNumber;
+
+				symbAddress = contents.getLong(0x10);
+				symbLength = contents.getLong(0x14);
+
+				infoAddress = contents.getLong(0x18);
+				infoLength = contents.getLong(0x1C);
+				fileAddress = contents.getLong(0x20);
+				fileLength = contents.getLong(0x24);
+
+				relocation_address = infoAddress + 0x2C;
+				tempNumber = contents.getLong(relocation_address);
+				group_num = contents.getLong(infoAddress + tempNumber + 0x8);
+				grprel_baseoff = infoAddress + tempNumber + 0x10;
+
+				std::ofstream output("stringdata.txt");
+				summarizeSymbStringData(output);
 			}
 			return result;
-		}
-		std::size_t brsarFile::readIntFromContents(std::size_t offsetIn, std::size_t& numGotten)
-		{
-			return contents.getLong(offsetIn);
 		}
 
 		std::size_t brsarFile::getGroupOffset(std::size_t groupIDIn, std::size_t* grakOut)
@@ -545,15 +579,14 @@ namespace lava
 
 			std::size_t groupID = SIZE_MAX;
 			std::size_t tempAddress = SIZE_MAX;
-			std::size_t numGotten = 0;
 			bool found = 0;
 			std::size_t i = 0;
 			std::size_t buff = 0;;
 			while (!found && i < group_num)
 			{
 				buff = grprel_baseoff + (i * 8);
-				tempAddress = readIntFromContents(buff, numGotten);
-				groupID = readIntFromContents(info_address + 8 + tempAddress, numGotten);
+				tempAddress = contents.getLong(buff);
+				groupID = contents.getLong(infoAddress + 8 + tempAddress);
 				if (groupID == groupIDIn)
 				{
 					if (grakOut != nullptr)
@@ -561,11 +594,33 @@ namespace lava
 						*grakOut = i;
 					}
 					found = 1;
-					result = info_address + 8 + tempAddress;
-					//std::cout << "Found Group #" << groupID << " @ 0x" << lava::numToHexStringWithPadding(result, 8) << "\n";
+					result = infoAddress + 8 + tempAddress;
 				}
 				i++;
 			}
+			return result;
+		}
+		
+
+		bool brsarFile::summarizeSymbStringData(std::ostream& output)
+		{
+			bool result = 0;
+
+			if (output.good() && symbSection.address != ULONG_MAX)
+			{
+				unsigned long stringOffset = ULONG_MAX;
+				unsigned long stringAddress = ULONG_MAX;
+				unsigned long stringOffsetAddress = symbSection.address + 0x08 + symbSection.symb_string_offset + 0x04;
+				for (std::size_t i = 0; i < symbSection.symb_string_count; i++)
+				{
+					stringOffset = symbSection.stringOffsets[i];
+					stringAddress = symbSection.address + stringOffset + 0x08;
+					char* ptr = contents.body.data() + stringAddress;
+					output << "[0x" << lava::numToHexStringWithPadding(i, 4) << "] 0x" << lava::numToHexStringWithPadding(stringOffsetAddress, 4) << "->0x" << lava::numToHexStringWithPadding(stringAddress, 4) << ": " << ptr << "\n";
+				}
+
+			}
+
 			return result;
 		}
 
@@ -597,7 +652,7 @@ namespace lava
 					lava::writeRawDataToStream(sawndOutput, groupID);
 					lava::writeRawDataToStream(sawndOutput, targetGroup.waveDataLength);
 
-					std::size_t collectionRefListAddress = targetGroup.listOffset.getAddress(info_address + 0x08);
+					std::size_t collectionRefListAddress = targetGroup.listOffset.getAddress(infoAddress + 0x08);
 					brawlReferenceVector collectionReferences;
 					collectionReferences.populate(contents, collectionRefListAddress);
 					std::cout << "Collection List Address(0x" << lava::numToHexStringWithPadding(collectionRefListAddress, 8) << ")\n";
@@ -608,7 +663,7 @@ namespace lava
 
 					for (std::size_t i = 0; i < collectionReferences.refs.size(); i++)
 					{
-						currentCollectionAddress = collectionReferences.refs[i].getAddress(info_address + 0x08);
+						currentCollectionAddress = collectionReferences.refs[i].getAddress(infoAddress + 0x08);
 						std::cout << "Collection #" << i << ": Info Section Offset = 0x" << lava::numToHexStringWithPadding(currentCollectionAddress, 8) << "\n";
 						groupInfoEntries.push_back(groupInfo());
 						currEntry = &groupInfoEntries.back();

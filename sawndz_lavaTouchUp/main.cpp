@@ -1184,7 +1184,10 @@ int main(int argc, char** argv)
 				//SawndCreate(arg[0]);
 				lava::sawndz::brsarFile testBrsar;
 				testBrsar.init(brsarName);
-				testBrsar.exportSawnd(arg[0], "test.sawnd");
+				for (std::size_t i = 0; i < 10; i++)
+				{
+					testBrsar.exportSawnd(arg[0] + i, "test" + lava::numToDecStringWithPadding(arg[0] + i, 2) + ".sawnd");
+				}
 				return 0;
 			}
 			if (strcmp("sawnd", argv[1]) == 0)
