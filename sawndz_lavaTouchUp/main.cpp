@@ -1181,7 +1181,7 @@ int main(int argc, char** argv)
 				sscanf_s(argv[2], "%lld", &arg[0]);
 				if (argc == 4)
 					brsarName = argv[3];
-				SawndCreate(arg[0]);
+				//SawndCreate(arg[0]);
 				lava::sawndz::brsarFile testBrsar;
 				testBrsar.init(brsarName);
 				testBrsar.exportSawnd(arg[0], "test.sawnd");
