@@ -13,6 +13,30 @@ namespace lava
 	{
 	private:
 		bool _populated = 0;
+
+		template<typename objectType>
+		std::vector<unsigned char> typeToBytes(objectType& objectIn, bool reverse)
+		{
+			std::vector<unsigned char> result = std::vector<unsigned char>((unsigned char*)(&objectIn), (unsigned char*)(&objectIn) + sizeof(objectType));
+			if (reverse)
+			{
+				std::reverse(result.begin(), result.end());
+			}
+			return result;
+		}
+
+		template<typename objectType>
+		objectType bytesToType(std::vector<unsigned char> bytesIn, bool reverse)
+		{
+			objectType result = ULONG_MAX;
+			if (reverse)
+			{
+				std::reverse(bytesIn.begin(), bytesIn.end());
+			}
+			result = *((objectType*)bytesIn.data());
+			return result;
+		}
+
 	public:
 		std::vector<char> body = {};
 	private:
@@ -21,11 +45,10 @@ namespace lava
 		{
 			objectType result = SIZE_MAX;
 			std::size_t numGotten = 0;
-			std::vector<char> bytes = getBytes(sizeof(objectType), startIndex, numGotten);
+			std::vector<unsigned char> bytes = getBytes(sizeof(objectType), startIndex, numGotten);
 			if (numGotten == sizeof(objectType))
 			{
-				std::reverse(bytes.begin(), bytes.end());
-				result = *((objectType*)bytes.data());
+				result = bytesToType<objectType>(bytes, 1);
 			}
 			return result;
 		}
@@ -35,9 +58,7 @@ namespace lava
 			bool result = 0;
 			if (startIndex + sizeof(objectType) < body.size())
 			{
-				std::vector<char> temp((char*)(&objectIn), (char*)(&objectIn) + sizeof(objectType));
-				std::reverse(temp.begin(), temp.end());
-				result = setBytes(temp, startIndex);
+				result = setBytes(typeToBytes(objectIn, 1), startIndex);
 			}
 			return result;
 		}
@@ -47,9 +68,7 @@ namespace lava
 			bool result = 0;
 			if (startIndex < body.size())
 			{
-				std::vector<char> temp((char*)(&objectIn), (char*)(&objectIn) + sizeof(objectType));
-				std::reverse(temp.begin(), temp.end());
-				result = insertBytes(temp, startIndex);
+				result = insertBytes(typeToBytes(objectIn, 1), startIndex);
 			}
 			return result;
 		}
@@ -60,9 +79,7 @@ namespace lava
 			std::size_t result = 0;
 			if (startItr < body.size())
 			{
-				std::vector<char> temp((char*)(&objectIn), (char*)(&objectIn) + sizeof(objectType));
-				std::reverse(temp.begin(), temp.end());
-				result = search(temp, startItr, endItr);
+				result = search(typeToBytes(objectIn, 1), startItr, endItr);
 			}
 			return result;
 		}
@@ -73,9 +90,7 @@ namespace lava
 			std::vector<std::size_t> result{};
 			if (startItr < body.size())
 			{
-				std::vector<char> temp((char*)(&objectIn), (char*)(&objectIn) + sizeof(objectType));
-				std::reverse(temp.begin(), temp.end());
-				result = searchMultiple(temp, startItr, endItr);
+				result = searchMultiple(typeToBytes(objectIn, 1), startItr, endItr);
 			}
 			return result;
 		}
@@ -84,7 +99,7 @@ namespace lava
 		void populate(std::istream& sourceStream);
 		bool populated();
 
-		std::vector<char> getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGot);
+		std::vector<unsigned char> getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGot);
 		unsigned long long int getLLong(std::size_t startIndex);
 		unsigned long int getLong(std::size_t startIndex);
 		unsigned short int getShort(std::size_t startIndex);
@@ -92,7 +107,7 @@ namespace lava
 		double getDouble(std::size_t startIndex);
 		float getFloat(std::size_t startIndex);
 
-		bool setBytes(std::vector<char> bytesIn, std::size_t atIndex);
+		bool setBytes(std::vector<unsigned char> bytesIn, std::size_t atIndex);
 		bool setLLong(unsigned long long int valueIn, std::size_t atIndex);
 		bool setLong(unsigned long int valueIn, std::size_t atIndex);
 		bool setShort(unsigned short int valueIn, std::size_t atIndex);
@@ -100,7 +115,7 @@ namespace lava
 		bool setDouble(double valueIn, std::size_t atIndex);
 		bool setFloat(float valueIn, std::size_t atIndex);
 
-		bool insertBytes(std::vector<char> bytesIn, std::size_t atIndex);
+		bool insertBytes(std::vector<unsigned char> bytesIn, std::size_t atIndex);
 		bool insertLLong(unsigned long long int valueIn, std::size_t atIndex);
 		bool insertLong(unsigned long int valueIn, std::size_t atIndex);
 		bool insertShort(unsigned short int valueIn, std::size_t atIndex);
@@ -108,7 +123,7 @@ namespace lava
 		bool insertDouble(double valueIn, std::size_t atIndex);
 		bool insertFloat(float valueIn, std::size_t atIndex);
 
-		std::size_t search(const std::vector<char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
+		std::size_t search(const std::vector<unsigned char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::size_t searchLLong(unsigned long long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::size_t searchLong(unsigned long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::size_t searchShort(unsigned short int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
@@ -116,7 +131,7 @@ namespace lava
 		std::size_t searchDouble(double searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::size_t searchFloat(float searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 
-		std::vector<std::size_t> searchMultiple(const std::vector<char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
+		std::vector<std::size_t> searchMultiple(const std::vector<unsigned char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::vector<std::size_t> searchMultipleLLong(unsigned long long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::vector<std::size_t> searchMultipleLong(unsigned long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
 		std::vector<std::size_t> searchMultipleShort(unsigned short int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);

@@ -18,24 +18,24 @@ namespace lava
 		return _populated;
 	}
 
-	std::vector<char> byteArray::getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGotten)
+	std::vector<unsigned char> byteArray::getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGotten)
 	{
 		numGotten = 0;
 		if (startIndex < body.size())
 		{
 			if (startIndex + numToGet > body.size())
 			{
-				numToGet = body.size() - startIndex;
-				return std::vector<char>(body.begin() + startIndex, body.end());
+				numGotten = body.size() - startIndex;
+				return std::vector<unsigned char>(body.begin() + startIndex, body.end());
 			}
 			numGotten = numToGet;
-			return std::vector<char>(body.begin() + startIndex, body.begin() + startIndex + numToGet);
+			return std::vector<unsigned char>(body.begin() + startIndex, body.begin() + startIndex + numToGet);
 		}
 		else
 		{
 			std::cerr << "\nRequested region startpoint was invalid. Specified index was [" << startIndex << "], max valid index is [" << body.size() - 1 << "].\n";
 		}
-		return std::vector<char>();
+		return std::vector<unsigned char>();
 	}
 	unsigned long long int byteArray::getLLong(std::size_t startIndex)
 	{
@@ -62,7 +62,7 @@ namespace lava
 		return getObj<float>(startIndex);
 	}
 
-	bool byteArray::setBytes(std::vector<char> bytesIn, std::size_t atIndex)
+	bool byteArray::setBytes(std::vector<unsigned char> bytesIn, std::size_t atIndex)
 	{
 		bool result = 0;
 		if ((atIndex + bytesIn.size()) > atIndex && atIndex + bytesIn.size() < body.size())
@@ -117,7 +117,7 @@ namespace lava
 		return setObj<float>(valueIn, atIndex);
 	}
 
-	bool byteArray::insertBytes(std::vector<char> bytesIn, std::size_t atIndex)
+	bool byteArray::insertBytes(std::vector<unsigned char> bytesIn, std::size_t atIndex)
 	{
 		bool result = 0;
 		if (atIndex < body.size())
@@ -152,9 +152,10 @@ namespace lava
 		return insertObj<float>(valueIn, atIndex);
 	}
 
-	std::size_t byteArray::search(const std::vector<char>& searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::search(const std::vector<unsigned char>& searchCriteria, std::size_t startItr, std::size_t endItr)
 	{
 		std::vector<char>::iterator itr = body.end();
+		std::vector<char>* searchCriteriaSigned = ((std::vector<char>*) &searchCriteria);
 		if (endItr < startItr)
 		{
 			endItr = SIZE_MAX;
@@ -165,7 +166,7 @@ namespace lava
 		}
 		if (body.size() && startItr < body.size() && searchCriteria.size())
 		{
-			itr = std::search(body.begin() + startItr, body.begin() + endItr, searchCriteria.begin(), searchCriteria.end());
+			itr = std::search(body.begin() + startItr, body.begin() + endItr, searchCriteriaSigned->begin(), searchCriteriaSigned->end());
 		}
 		return (itr != body.end()) ? itr - body.begin() : SIZE_MAX;
 	}
@@ -194,7 +195,7 @@ namespace lava
 		return findObj<float>(searchCriteria, startItr, endItr);
 	}
 
-	std::vector<std::size_t> byteArray::searchMultiple(const std::vector<char>& searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultiple(const std::vector<unsigned char>& searchCriteria, std::size_t startItr, std::size_t endItr)
 	{
 		std::size_t cursor = startItr;
 		std::vector<std::size_t> result;
