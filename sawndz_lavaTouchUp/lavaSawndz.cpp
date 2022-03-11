@@ -16,6 +16,8 @@ namespace lava
 
 	namespace sawndz
 	{
+		/* Brawl Reference */
+
 		brawlReference::brawlReference(unsigned long long valueIn)
 		{
 			isOffset = bool(valueIn & 0xFFFFFFFF00000000);
@@ -97,7 +99,313 @@ namespace lava
 			return result;
 		}
 
+		/* Brawl Reference */
+
+
+
 		
+
+
+
+		/* BRSAR Symb Section */
+
+		bool brsarSymbMaskEntry::populate(lava::byteArray& bodyIn, unsigned long addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				flags = bodyIn.getShort(addressIn);
+				bit = bodyIn.getShort(addressIn + 0x02);
+				leftID = bodyIn.getLong(address + 0x04);
+				rightID = bodyIn.getLong(address + 0x08);
+				stringID = bodyIn.getLong(address + 0x0C);
+				index = bodyIn.getLong(address + 0x10);
+				result = 1;
+			}
+
+			return result;
+		}
+		bool brsarSymbMaskHeader::populate(lava::byteArray& bodyIn, unsigned long addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				rootID = bodyIn.getLong(address);
+				numEntries = bodyIn.getLong(address + 0x04);
+
+				unsigned long cursor = address + 0x08;
+				unsigned long cursorMax = cursor + (0x14 * numEntries);
+
+				std::size_t i = 0;
+				entries.resize(numEntries);
+
+				while (cursor < cursorMax)
+				{
+					entries[i].populate(bodyIn, cursor);
+					cursor += 0x14;
+					i++;
+				}
+
+
+				result = 1;
+			}
+
+			return result;
+		}
+
+		bool brsarSymbSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				stringOffset = bodyIn.getLong(address + 0x08);
+				soundsOffset = bodyIn.getLong(address + 0x0C);
+				typesOffset = bodyIn.getLong(address + 0x10);
+				groupsOffset = bodyIn.getLong(address + 0x14);
+				banksOffset = bodyIn.getLong(address + 0x18);
+
+				soundsMaskHeader.populate(bodyIn, address + 0x08 + soundsOffset);
+				typesMaskHeader.populate(bodyIn, address + 0x08 + typesOffset);
+				groupsMaskHeader.populate(bodyIn, address + 0x08 + groupsOffset);
+				banksMaskHeader.populate(bodyIn, address + 0x08 + banksOffset);
+
+				unsigned long cursor = address + 0x08 + stringOffset;
+				stringOffsets.resize(bodyIn.getLong(cursor), ULONG_MAX);
+				cursor += 0x04;
+				for (std::size_t i = 0; i < stringOffsets.size(); i++)
+				{
+					stringOffsets[i] = bodyIn.getLong(cursor);
+					cursor += 0x04;
+				}
+			}
+			return result;
+		}
+
+		/* BRSAR Symb Section */
+
+
+
+		/* BRSAR Info Section */
+
+		bool brsarInfoSoundEntry::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				stringID = bodyIn.getLong(address);
+				fileID = bodyIn.getLong(address + 0x04);
+				playerID = bodyIn.getLong(address + 0x08);
+				param3DRefOffset = brawlReference(address + 0x0C);
+				volume = bodyIn.getChar(address + 0x14);
+				playerPriority = bodyIn.getChar(address + 0x15);
+				soundType = bodyIn.getChar(address + 0x16);
+				remoteFilter = bodyIn.getChar(address + 0x17);
+				soundInfoRef = brawlReference(address + 0x18);
+				userParam1 = bodyIn.getLong(address + 0x20);
+				userParam2 = bodyIn.getLong(address + 0x24);
+				panMode = bodyIn.getChar(address + 0x28);
+				panCurve = bodyIn.getChar(address + 0x29);
+				actorPlayerID = bodyIn.getChar(address + 0x2A);
+				reserved = bodyIn.getChar(address + 0x2B);
+			}
+
+			return result;
+		}
+
+		bool brsarInfoFileEntry::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				groupID = bodyIn.getLong(address);
+				index = bodyIn.getLong(address + 0x04);
+			}
+
+			return result;
+		}
+		bool brsarInfoFileHeader::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				headerLength = bodyIn.getLong(address);
+				dataLength = bodyIn.getLong(address + 0x04);
+				entryNumber = bodyIn.getLong(address + 0x08);
+				stringOffset = brawlReference(bodyIn.getLLong(address + 0x0C));
+				listOffset = brawlReference(bodyIn.getLLong(address + 0x14));
+			}
+
+			return result;
+		}
+
+		bool brsarInfoGroupEntry::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				fileID = bodyIn.getLong(address);
+				headerOffset = bodyIn.getLong(address + 0x04);
+				headerLength = bodyIn.getLong(address + 0x08);
+				dataOffset = bodyIn.getLong(address + 0x0C);
+				dataLength = bodyIn.getLong(address + 0x10);
+				reserved = bodyIn.getLong(address + 0x14);
+			}
+
+			return result;
+		}
+		bool brsarInfoGroupEntry::exportContents(std::ostream& destinationStream)
+		{
+			bool result = 0;
+			if (destinationStream.good())
+			{
+				lava::writeRawDataToStream(destinationStream, fileID);
+				lava::writeRawDataToStream(destinationStream, headerOffset);
+				lava::writeRawDataToStream(destinationStream, headerLength);
+				lava::writeRawDataToStream(destinationStream, dataOffset);
+				lava::writeRawDataToStream(destinationStream, dataLength);
+				lava::writeRawDataToStream(destinationStream, reserved);
+
+				result = destinationStream.good();
+			}
+			return result;
+		}
+		bool brsarInfoGroupHeader::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				stringID = bodyIn.getLong(address);
+				entryNum = bodyIn.getLong(address + 0x04);
+				extFilePathRef = brawlReference(bodyIn.getLLong(address + 0x08));
+				headerOffset = bodyIn.getLong(address + 0x10);
+				headerLength = bodyIn.getLong(address + 0x14);
+				waveDataOffset = bodyIn.getLong(address + 0x18);
+				waveDataLength = bodyIn.getLong(address + 0x1C);
+				listOffset = brawlReference(bodyIn.getLLong(address + 0x20));
+			}
+
+			return result;
+		}
+		bool brsarInfoGroupHeader::exportContents(std::ostream& destinationStream)
+		{
+			bool result = 0;
+			if (destinationStream.good())
+			{
+				lava::writeRawDataToStream(destinationStream, stringID);
+				lava::writeRawDataToStream(destinationStream, entryNum);
+				lava::writeRawDataToStream(destinationStream, extFilePathRef.getHex());
+				lava::writeRawDataToStream(destinationStream, headerOffset);
+				lava::writeRawDataToStream(destinationStream, headerLength);
+				lava::writeRawDataToStream(destinationStream, waveDataOffset);
+				lava::writeRawDataToStream(destinationStream, waveDataLength);
+				lava::writeRawDataToStream(destinationStream, listOffset.getHex());
+
+				result = destinationStream.good();
+			}
+			return result;
+		}
+
+		std::vector<brsarInfoFileHeader*> brsarInfoSection::findFilesWithGroupID(lava::byteArray& bodyIn, unsigned long groupIDIn)
+		{
+			std::vector<brsarInfoFileHeader*> result{};
+
+			if (bodyIn.populated())
+			{
+				brsarInfoFileHeader* currHeader = nullptr;
+				for (std::size_t i = 0; i < fileHeaders.size(); i++)
+				{
+					currHeader = &fileHeaders[i];
+					for (std::size_t u = 0; u < currHeader->entries.size(); u++)
+					{
+						if (currHeader->entries[u].groupID == groupIDIn)
+						{
+							result.push_back(currHeader);
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
+
+		bool brsarInfoSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				soundsSectionReference = brawlReference(bodyIn.getLLong(address + 0x08));
+				banksSectionReference = brawlReference(bodyIn.getLLong(address + 0x10));
+				playerSectionReference = brawlReference(bodyIn.getLLong(address + 0x18));
+				filesSectionReference = brawlReference(bodyIn.getLLong(address + 0x20));
+				groupsSectionReference = brawlReference(bodyIn.getLLong(address + 0x28));
+
+				soundsSection.populate(bodyIn, soundsSectionReference.getAddress(address + 0x08));
+				banksSection.populate(bodyIn, banksSectionReference.getAddress(address + 0x08));
+				playerSection.populate(bodyIn, playerSectionReference.getAddress(address + 0x08));
+				filesSection.populate(bodyIn, filesSectionReference.getAddress(address + 0x08));
+				groupsSection.populate(bodyIn, groupsSectionReference.getAddress(address + 0x08));
+			
+				soundEntries.resize(soundsSection.refs.size());
+				for (std::size_t i = 0; i < soundsSection.refs.size(); i++)
+				{
+					soundEntries[i].populate(bodyIn, soundsSection.refs[i].getAddress(address + 0x08));
+				}
+
+				fileHeaders.resize(filesSection.refs.size());
+				brsarInfoFileHeader* currHeader = nullptr;
+				for (std::size_t i = 0; i < filesSection.refs.size(); i++)
+				{
+					currHeader = &fileHeaders[i];
+					currHeader->populate(bodyIn, filesSection.refs[i].getAddress(address + 0x08));
+					brawlReferenceVector temp; 
+					temp.populate(bodyIn, currHeader->listOffset.getAddress(address + 0x08));
+
+					for (std::size_t u = 0; u < temp.refs.size(); u++)
+					{
+						currHeader->entries.push_back(brsarInfoFileEntry());
+						currHeader->entries.back().populate(bodyIn, temp.refs[u].getAddress(address + 0x08));
+					}
+				}
+			}
+
+			return result;
+		}
+
+		/* BRSAR Info Section */
+
+
+
+		/* BRSAR File Section */
+
+		/* RWSD */
 		bool dataInfo::populate(lava::byteArray& bodyIn, std::size_t addressIn)
 		{
 			bool result = 0;
@@ -208,7 +516,6 @@ namespace lava
 			}
 			return result;
 		}
-
 		bool rwsdDataSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
 		{
 			bool result = 0;
@@ -247,8 +554,24 @@ namespace lava
 			return result;
 		}
 
+		bool wavePacket::populate(lava::byteArray& bodyIn, unsigned long addressIn, unsigned long lengthIn)
+		{
+			bool result = 0;
 
-		bool waveInfo::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+				length = lengthIn;
+
+				std::size_t numGotten = SIZE_MAX;
+				body = bodyIn.getBytes(lengthIn, addressIn, numGotten);
+				result = numGotten == lengthIn;
+			}
+
+			return result;
+		}
+
+		bool waveInfo::populate(lava::byteArray& bodyIn, unsigned long addressIn)
 		{
 			bool result = 0;
 
@@ -300,12 +623,11 @@ namespace lava
 				{
 					lava::writeRawDataToStream(destinationStream, channelInfoTable[i]);
 				}
-				
+
 				result = destinationStream.good();
 			}
 			return result;
 		}
-
 		bool rwsdWaveSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
 		{
 			bool result = 0;
@@ -349,7 +671,6 @@ namespace lava
 			}
 			return result;
 		}
-
 
 		bool rwsdHeader::populate(lava::byteArray& bodyIn, std::size_t addressIn)
 		{
@@ -439,109 +760,115 @@ namespace lava
 
 			return result;
 		}
+		/* RWSD */
 
-
-		bool collectionInfo::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		bool brsarFileSection::catalogueRWSD(lava::byteArray& bodyIn, std::size_t addressIn)
 		{
 			bool result = 0;
 
 			if (bodyIn.populated())
 			{
-				address = addressIn;
+				unsigned long cursor = address + 0x20;
+				unsigned long cursorMax = address + length;
+				rwsd* currEntry = nullptr;
 
-				fileID = bodyIn.getLong(address);
-				headerOffset = bodyIn.getLong(address + 0x04);
-				headerLength = bodyIn.getLong(address + 0x08);
-				dataOffset = bodyIn.getLong(address + 0x0C);
-				dataLength = bodyIn.getLong(address + 0x10);
-				reserved = bodyIn.getLong(address + 0x14);
-			}
+				std::vector<waveInfo>* currEntryWaveInfoVec = nullptr;
+				waveInfo* currWaveInfoEntry = nullptr;
 
-			return result;
-		}
-		bool collectionInfo::exportContents(std::ostream& destinationStream)
-		{
-			bool result = 0;
-			if (destinationStream.good())
-			{
-				lava::writeRawDataToStream(destinationStream, fileID);
-				lava::writeRawDataToStream(destinationStream, headerOffset);
-				lava::writeRawDataToStream(destinationStream, headerLength);
-				lava::writeRawDataToStream(destinationStream, dataOffset);
-				lava::writeRawDataToStream(destinationStream, dataLength);
-				lava::writeRawDataToStream(destinationStream, reserved);
+				unsigned int rwsdIndex = 0;
 
-				result = destinationStream.good();
-			}
-			return result;
-		}
-
-		bool groupHeader::populate(lava::byteArray& bodyIn, std::size_t addressIn)
-		{
-			bool result = 0;
-
-			if (bodyIn.populated())
-			{
-				address = addressIn;
-
-				stringID = bodyIn.getLong(address);
-				entryNum = bodyIn.getLong(address + 0x04);
-				extFilePathRef = brawlReference(bodyIn.getLLong(address + 0x08));
-				headerOffset = bodyIn.getLong(address + 0x10);
-				headerLength = bodyIn.getLong(address + 0x14);
-				waveDataOffset = bodyIn.getLong(address + 0x18);
-				waveDataLength = bodyIn.getLong(address + 0x1C);
-				listOffset = brawlReference(bodyIn.getLLong(address + 0x20));
-			}
-
-			return result;
-		}
-		bool groupHeader::exportContents(std::ostream& destinationStream)
-		{
-			bool result = 0;
-			if (destinationStream.good())
-			{
-				lava::writeRawDataToStream(destinationStream, stringID);
-				lava::writeRawDataToStream(destinationStream, entryNum);
-				lava::writeRawDataToStream(destinationStream, extFilePathRef.getHex());
-				lava::writeRawDataToStream(destinationStream, headerOffset);
-				lava::writeRawDataToStream(destinationStream, headerLength);
-				lava::writeRawDataToStream(destinationStream, waveDataOffset);
-				lava::writeRawDataToStream(destinationStream, waveDataLength);
-				lava::writeRawDataToStream(destinationStream, listOffset.getHex());
-
-				result = destinationStream.good();
-			}
-			return result;
-		}
-
-		bool brsarSymbSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
-		{
-			bool result = 0;
-
-			if (bodyIn.populated())
-			{
-				address = addressIn;
-
-				symb_string_offset = bodyIn.getLong(address + 0x08);
-				symb_sound_offset = bodyIn.getLong(address + 0x0C);
-				symb_types_offset = bodyIn.getLong(address + 0x10);
-				symb_group_offset = bodyIn.getLong(address + 0x14);
-				symb_banks_offset = bodyIn.getLong(address + 0x18);
-
-				unsigned long cursor = address + 0x08 + symb_string_offset;
-				stringOffsets.resize(bodyIn.getLong(cursor), ULONG_MAX);
-				cursor += 0x04;
-				for (std::size_t i = 0; i < stringOffsets.size(); i++)
+				while (cursor < cursorMax)
 				{
-					stringOffsets[i] = bodyIn.getLong(cursor);
-					cursor += 0x04;
+					std::cout << "RWSD Entry 0x" << lava::numToHexStringWithPadding(rwsdIndex, 0x08) << " (@ 0x" << lava::numToHexStringWithPadding(cursor, 0x08) << ")\n";
+					rwsdEntries.push_back(rwsd());
+					currEntry = &rwsdEntries.back();
+					currEntry->populate(bodyIn, cursor);
+					cursor += currEntry->header.headerLength;
+
+					if (bodyIn.getLong(cursor) != _HEX_TAG_RWSD)
+					{
+						currEntryWaveInfoVec = &currEntry->waveSection.entries;
+
+						for (std::size_t i = 0; i < currEntry->waveSection.entryCount; i++)
+						{
+							currWaveInfoEntry = &(*currEntryWaveInfoVec)[i];
+							std::cout << "Data Location: 0x" << lava::numToHexStringWithPadding(cursor + currWaveInfoEntry->dataLocation, 0x08);
+							std::cout << " + Bytes: 0x" << lava::numToHexStringWithPadding(currWaveInfoEntry->nibbles / 2, 0x08);
+							std::cout << " = 0x" << lava::numToHexStringWithPadding(cursor + currWaveInfoEntry->dataLocation + (currWaveInfoEntry->nibbles / 2), 0x08) << "\n";
+						}
+
+						cursor += currEntryWaveInfoVec->back().dataLocation + (currEntryWaveInfoVec->back().nibbles / 2);
+						if (cursor % 0x10)
+						{
+							cursor += 0x10 - (cursor % 0x10);
+						}
+
+						// 0x52575344 == RWSD in hex, it's the hex tag for a new RWSD section
+						while (bodyIn.getLong(cursor) != _HEX_TAG_RWSD)
+						{
+							cursor += 0x04;
+						}
+					}
+					else
+					{
+						std::cout << "No entries?\n";
+					}
+
+					rwsdIndex++;
+
 				}
+
+			}
+
+			return result;
+		}
+		bool brsarFileSection::catalogueRWSDCheat(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				unsigned long cursor = addressIn;
+				unsigned long cursorMax = address + length;
+				rwsd* currEntry = nullptr;
+
+				std::vector<std::size_t> rwsdLocations = bodyIn.searchMultiple({ 0x52, 0x57, 0x53, 0x44, 0xFE, 0xFF }, cursor, cursorMax);
+
+				rwsdEntries.resize(rwsdLocations.size());
+				for (std::size_t i = 0; i < rwsdLocations.size(); i++)
+				{
+					std::cout << lava::numToHexStringWithPadding(i, 0x04) << " / " << lava::numToHexStringWithPadding(rwsdLocations.size(), 0x04) <<
+						" (0x" << lava::numToHexStringWithPadding(rwsdLocations[i], 0x08) << ")\n";
+					currEntry = &rwsdEntries[i];
+					currEntry->populate(bodyIn, rwsdLocations[i]);
+				}
+				result = 1;
+			}
+
+			return result;
+		}
+		bool brsarFileSection::populate(lava::byteArray& bodyIn, std::size_t addressIn)
+		{
+			bool result = 0;
+
+			if (bodyIn.populated())
+			{
+				address = addressIn;
+
+				length = bodyIn.getLong(address + 0x04);
+
+				//catalogueRWSDCheat(bodyIn, address + 0x20);
+				//int test = 1;
 			}
 
 			return result;
 		}
 
+		/* BRSAR File Section */
+
+
+
+		/* BRSAR */
 
 		bool brsarFile::init(std::string filePathIn)
 		{
@@ -554,55 +881,30 @@ namespace lava
 				contents.populate(fileIn);
 				std::size_t tempNumber = 0;
 
-				symbAddress = contents.getLong(0x10);
-				symbLength = contents.getLong(0x14);
-				symbSection.populate(contents, symbAddress);
+				symbSection.populate(contents, contents.getLong(0x10));
+				infoSection.populate(contents, contents.getLong(0x18));
+				fileSection.populate(contents, contents.getLong(0x20));
 
-				infoAddress = contents.getLong(0x18);
-				infoLength = contents.getLong(0x1C);
-				fileAddress = contents.getLong(0x20);
-				fileLength = contents.getLong(0x24);
-
-				relocation_address = infoAddress + 0x2C;
-				tempNumber = contents.getLong(relocation_address);
-				group_num = contents.getLong(infoAddress + tempNumber + 0x8);
-				grprel_baseoff = infoAddress + tempNumber + 0x10;
-
-				std::ofstream output("stringdata.txt");
-				summarizeSymbStringData(output);
+				listSoundsInGroup(0x08);
 			}
 			return result;
 		}
 
-		std::size_t brsarFile::getGroupOffset(std::size_t groupIDIn, std::size_t* grakOut)
+		std::string brsarFile::getSymbString(unsigned long indexIn)
 		{
-			std::size_t result = SIZE_MAX;
+			std::string result = "";
 
-			std::size_t groupID = SIZE_MAX;
-			std::size_t tempAddress = SIZE_MAX;
-			bool found = 0;
-			std::size_t i = 0;
-			std::size_t buff = 0;;
-			while (!found && i < group_num)
+			if (contents.populated())
 			{
-				buff = grprel_baseoff + (i * 8);
-				tempAddress = contents.getLong(buff);
-				groupID = contents.getLong(infoAddress + 8 + tempAddress);
-				if (groupID == groupIDIn)
+				if (indexIn < symbSection.stringOffsets.size())
 				{
-					if (grakOut != nullptr)
-					{
-						*grakOut = i;
-					}
-					found = 1;
-					result = infoAddress + 8 + tempAddress;
+					char* ptr = contents.body.data() + symbSection.address + 0x08 + symbSection.stringOffsets[indexIn];
+					result = std::string(ptr);
 				}
-				i++;
 			}
+
 			return result;
 		}
-		
-
 		bool brsarFile::summarizeSymbStringData(std::ostream& output)
 		{
 			bool result = 0;
@@ -611,7 +913,7 @@ namespace lava
 			{
 				unsigned long stringOffset = ULONG_MAX;
 				unsigned long stringAddress = ULONG_MAX;
-				unsigned long stringOffsetAddress = symbSection.address + 0x08 + symbSection.symb_string_offset + 0x04;
+				unsigned long stringOffsetAddress = symbSection.address + 0x08 + symbSection.stringOffset + 0x04;
 				for (std::size_t i = 0; i < symbSection.stringOffsets.size(); i++)
 				{
 					stringOffset = symbSection.stringOffsets[i];
@@ -625,23 +927,139 @@ namespace lava
 
 			return result;
 		}
+		bool brsarFile::outputConsecutiveSoundEntryStringsWithSameFileID(unsigned long startingIndex, std::ostream& output)
+		{
+			bool result = 0;
+
+			if (output.good() && symbSection.address != ULONG_MAX)
+			{
+				unsigned long fileID = infoSection.soundEntries[startingIndex].fileID;
+				std::size_t i = startingIndex;
+				while (i < infoSection.soundEntries.size() && infoSection.soundEntries[i].fileID == fileID)
+				{
+					output << "\t[String 0x" << lava::numToHexStringWithPadding(i, 0x04) << "] " << getSymbString(i) << "\n";
+					i++;
+				}
+			}
+
+			return result;
+		}
+
+		unsigned long brsarFile::getGroupOffset(unsigned long groupIDIn)
+		{
+			std::size_t result = SIZE_MAX;
+
+			std::size_t i = 0;
+			brsarInfoGroupHeader currentGroup;
+			bool done = 0;
+
+			while (!done && i < infoSection.groupsSection.refs.size())
+			{
+				currentGroup.populate(contents, infoSection.groupsSection.refs[i].getAddress(infoSection.address + 0x08));
+				if (groupIDIn == currentGroup.stringID)
+				{
+					result = currentGroup.address;
+					done = 1;
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+			return result;
+		}
+		bool brsarFile::listSoundsInGroup(unsigned long groupIDIn)
+		{
+			bool result = 0;
+
+			if (contents.populated())
+			{
+				brsarInfoGroupHeader groupHeader;
+				brawlReferenceVector collectionReferences;
+				std::vector<brsarInfoGroupEntry> collections{};
+				std::vector<unsigned long> groupEntriesFirstSoundIndex{};
+				std::vector<rwsd> collectionRWSDs{};
+				unsigned long groupOffset = getGroupOffset(groupIDIn);
+
+				std::vector<brsarInfoFileEntry*> filesForGroup{};
+
+				if (groupOffset != ULONG_MAX)
+				{
+					groupHeader.populate(contents, groupOffset);
+					collectionReferences.populate(contents, groupHeader.listOffset.getAddress(infoSection.address + 0x08));
+
+					// Populate the collections associated with this group.
+					collections.resize(collectionReferences.refs.size());
+					for (std::size_t i = 0; i < collectionReferences.refs.size(); i++)
+					{
+						collections[i].populate(contents, collectionReferences.refs[i].getAddress(infoSection.address + 0x08));
+					}
+
+					// Find the first Sound Entry with each collection's File ID.
+					groupEntriesFirstSoundIndex.resize(collections.size(), ULONG_MAX);
+					for (std::size_t u = 0; u < collections.size(); u++)
+					{
+						for (std::size_t i = 0; groupEntriesFirstSoundIndex[u] == ULONG_MAX && i < infoSection.soundEntries.size(); i++)
+						{
+							if (infoSection.soundEntries[i].fileID == collections[u].fileID)
+							{
+								groupEntriesFirstSoundIndex[u] = i;
+							}
+						}
+					}
+
+					collectionRWSDs.resize(collections.size());
+					for (std::size_t i = 0; i < collections.size(); i++)
+					{
+						collectionRWSDs[i].populate(contents, groupHeader.headerOffset + collections[i].headerOffset);
+					}
+
+					std::vector<dataInfo>* dataVector = nullptr;
+					std::vector<waveInfo>* waveVector = nullptr;
+					dataInfo* dataPtr = nullptr;
+					waveInfo* wavePtr = nullptr;
+					for (std::size_t i = 0; i < collectionRWSDs.size(); i++)
+					{
+						dataVector = &collectionRWSDs[i].dataSection.entries;
+						waveVector = &collectionRWSDs[i].waveSection.entries;
+						std::cout << "Summary for Collection #" << i << " (File ID: 0x" << lava::numToHexStringWithPadding(collections[i].fileID, 0x04) << ")\n";
+						for (std::size_t u = 0; u < dataVector->size(); u++)
+						{
+							dataPtr = &(*dataVector)[u];
+							wavePtr = &(*waveVector)[dataPtr->ntWaveIndex];
+							std::cout << "\tSound: 0x" << lava::numToHexStringWithPadding(u, 0x04) << " (\"" <<
+								getSymbString(0x194 + groupEntriesFirstSoundIndex[i] + u) << "\")\n";
+							std::cout << "\t\tWave Index: 0x" << lava::numToHexStringWithPadding((*dataVector)[u].ntWaveIndex, 0x04) << "\n";
+							std::cout << "\t\tWave Data Offset: 0x" << lava::numToHexStringWithPadding(wavePtr->dataLocation, 0x08) << "\n";
+							std::cout << "\t\tWave Data Address: 0x" << 
+								lava::numToHexStringWithPadding(groupHeader.waveDataOffset + collections[i].dataOffset + wavePtr->dataLocation, 0x08) << "\n";
+							std::cout << "\t\tWave Data Length: 0x" << lava::numToHexStringWithPadding(wavePtr->nibbles / 2, 0x08) << "\n";
+						}
+					}
+
+
+					int temp = 0;
+				}
+			}
+			return result;
+		}
 
 		bool brsarFile::exportSawnd(std::size_t groupID, std::string targetFilePath)
 		{
 			bool result = 0;
 			std::cout << "Creating \"" << targetFilePath << "\" from Group #" << groupID << "...\n";
-			std::size_t groupOffset = SIZE_MAX;
 
 			std::ofstream sawndOutput;
 			sawndOutput.open(targetFilePath, std::ios_base::out | std::ios_base::binary);
 			if (sawndOutput.is_open())
 			{
-				groupOffset = getGroupOffset(groupID);
+				std::size_t groupOffset = getGroupOffset(groupID);
 				std::cout << "\nGroup found @ 0x" << lava::numToHexStringWithPadding(groupOffset, 8) << "!\n";
 
 				if (groupOffset != SIZE_MAX)
 				{
-					lava::sawndz::groupHeader targetGroup;
+					lava::sawndz::brsarInfoGroupHeader targetGroup;
 					targetGroup.populate(contents, groupOffset);
 
 					std::cout << "Address: 0x" << lava::numToHexStringWithPadding(targetGroup.address, 8) << "\n";
@@ -654,20 +1072,20 @@ namespace lava
 					lava::writeRawDataToStream(sawndOutput, groupID);
 					lava::writeRawDataToStream(sawndOutput, targetGroup.waveDataLength);
 
-					std::size_t collectionRefListAddress = targetGroup.listOffset.getAddress(infoAddress + 0x08);
+					std::size_t collectionRefListAddress = targetGroup.listOffset.getAddress(infoSection.address + 0x08);
 					brawlReferenceVector collectionReferences;
 					collectionReferences.populate(contents, collectionRefListAddress);
 					std::cout << "Collection List Address(0x" << lava::numToHexStringWithPadding(collectionRefListAddress, 8) << ")\n";
 					std::cout << "Collection Count: " << collectionReferences.refs.size() << "\n";
-					std::vector<collectionInfo> groupInfoEntries;
-					collectionInfo* currEntry = nullptr;
-					std::size_t currentCollectionAddress = SIZE_MAX;
+					std::vector<brsarInfoGroupEntry> groupInfoEntries;
+					brsarInfoGroupEntry* currEntry = nullptr;
+					unsigned long currentCollectionAddress = ULONG_MAX;
 
 					for (std::size_t i = 0; i < collectionReferences.refs.size(); i++)
 					{
-						currentCollectionAddress = collectionReferences.refs[i].getAddress(infoAddress + 0x08);
+						currentCollectionAddress = collectionReferences.refs[i].getAddress(infoSection.address + 0x08);
 						std::cout << "Collection #" << i << ": Info Section Offset = 0x" << lava::numToHexStringWithPadding(currentCollectionAddress, 8) << "\n";
-						groupInfoEntries.push_back(collectionInfo());
+						groupInfoEntries.push_back(brsarInfoGroupEntry());
 						currEntry = &groupInfoEntries.back();
 						currEntry->populate(contents, currentCollectionAddress);
 
@@ -691,7 +1109,6 @@ namespace lava
 				else
 				{
 					std::cerr << "Provided group ID couldn't be located. Aborting export.\n";
-					printf("ERROR: The group is incorrect.\n");
 					remove(targetFilePath.c_str());
 				}
 			}
@@ -703,6 +1120,8 @@ namespace lava
 			}
 			return result;
 		}
+
+		/* BRSAR */
 
 	}
 }

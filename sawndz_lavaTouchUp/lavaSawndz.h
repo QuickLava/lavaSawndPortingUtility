@@ -19,6 +19,8 @@ namespace lava
 
 	namespace sawndz
 	{
+		const unsigned long _HEX_TAG_RWSD = 0x52575344;
+
 		struct brawlReference
 		{
 			bool isOffset = 1;
@@ -37,6 +39,176 @@ namespace lava
 			std::vector<unsigned long> getHex();
 			bool exportContents(std::ostream& destinationStream);
 		};
+
+
+
+		struct brsarSymbMaskEntry
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned short flags = USHRT_MAX;
+			unsigned short bit = USHRT_MAX;
+			unsigned long leftID = ULONG_MAX;
+			unsigned long rightID = ULONG_MAX;
+			unsigned long stringID = ULONG_MAX;
+			unsigned long index = ULONG_MAX;
+
+			bool populate(lava::byteArray& bodyIn, unsigned long addressIn);
+		};
+		struct brsarSymbMaskHeader
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long rootID = ULONG_MAX;
+			unsigned long numEntries = ULONG_MAX;
+
+			std::vector<brsarSymbMaskEntry> entries{};
+
+			bool populate(lava::byteArray& bodyIn, unsigned long addressIn);
+		};
+		struct brsarSymbSection
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long stringOffset = ULONG_MAX;
+			unsigned long soundsOffset = ULONG_MAX;
+			unsigned long typesOffset = ULONG_MAX;
+			unsigned long groupsOffset = ULONG_MAX;
+			unsigned long banksOffset = ULONG_MAX;
+
+			std::vector<unsigned long> stringOffsets{};
+			brsarSymbMaskHeader soundsMaskHeader;
+			brsarSymbMaskHeader typesMaskHeader;
+			brsarSymbMaskHeader groupsMaskHeader;
+			brsarSymbMaskHeader banksMaskHeader;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+		};
+
+
+
+		struct brsarInfoSoundEntry
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long stringID = ULONG_MAX;
+			unsigned long fileID = ULONG_MAX;
+			unsigned long playerID = ULONG_MAX;
+			brawlReference param3DRefOffset = ULLONG_MAX;
+			unsigned char volume = UCHAR_MAX;
+			unsigned char playerPriority = UCHAR_MAX;
+			unsigned char soundType = UCHAR_MAX;
+			unsigned char remoteFilter = UCHAR_MAX;
+			brawlReference soundInfoRef = ULLONG_MAX;
+			unsigned long userParam1 = ULONG_MAX;
+			unsigned long userParam2 = ULONG_MAX;
+			unsigned char panMode = UCHAR_MAX;
+			unsigned char panCurve = UCHAR_MAX;
+			unsigned char actorPlayerID = UCHAR_MAX;
+			unsigned char reserved = UCHAR_MAX;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+		};
+		struct brsarInfoBankEntry
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long stringID = ULONG_MAX;
+			unsigned long fileID = ULONG_MAX;
+			unsigned long padding = ULONG_MAX;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+		};
+		struct brsarInfoPlayerEntry
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long stringID = ULONG_MAX;
+			unsigned char playableSoundCount = UCHAR_MAX;
+			unsigned char padding = UCHAR_MAX;
+			unsigned short padding2 = USHRT_MAX;
+			unsigned long heapSize = ULONG_MAX;
+			unsigned long reserved = ULONG_MAX;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+		};
+		struct brsarInfoFileEntry
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long groupID = ULONG_MAX;
+			unsigned long index = ULONG_MAX;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+		};
+		struct brsarInfoFileHeader
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long headerLength = ULONG_MAX;
+			unsigned long dataLength = ULONG_MAX;
+			unsigned long entryNumber = ULONG_MAX;
+			brawlReference stringOffset = ULLONG_MAX;
+			brawlReference listOffset = ULLONG_MAX;
+
+			std::vector<brsarInfoFileEntry> entries;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+		};
+		struct brsarInfoGroupEntry
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long fileID = ULONG_MAX;
+			unsigned long headerOffset = ULONG_MAX;
+			unsigned long headerLength = ULONG_MAX;
+			unsigned long dataOffset = ULONG_MAX;
+			unsigned long dataLength = ULONG_MAX;
+			unsigned long reserved = ULONG_MAX;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t address);
+			bool exportContents(std::ostream& destinationStream);
+		};
+		struct brsarInfoGroupHeader
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long stringID = ULONG_MAX;
+			unsigned long entryNum = ULONG_MAX;
+			brawlReference extFilePathRef = ULLONG_MAX;
+			unsigned long headerOffset = ULONG_MAX;
+			unsigned long headerLength = ULONG_MAX;
+			unsigned long waveDataOffset = ULONG_MAX;
+			unsigned long waveDataLength = ULONG_MAX;
+			brawlReference listOffset = ULLONG_MAX;
+
+			bool populate(lava::byteArray& bodyIn, std::size_t address);
+			bool exportContents(std::ostream& destinationStream);
+		};
+		struct brsarInfoSection
+		{
+			unsigned long address = ULONG_MAX;
+
+			unsigned long length = ULONG_MAX;
+			brawlReference soundsSectionReference = ULLONG_MAX;
+			brawlReference banksSectionReference = ULLONG_MAX;
+			brawlReference playerSectionReference = ULLONG_MAX;
+			brawlReference filesSectionReference = ULLONG_MAX;
+			brawlReference groupsSectionReference = ULLONG_MAX;
+
+			brawlReferenceVector soundsSection;
+			brawlReferenceVector banksSection;
+			brawlReferenceVector playerSection;
+			brawlReferenceVector filesSection;
+			brawlReferenceVector groupsSection;
+
+			std::vector<brsarInfoSoundEntry> soundEntries{};
+			std::vector<brsarInfoFileHeader> fileHeaders{};
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
+			std::vector<brsarInfoFileHeader*> findFilesWithGroupID(lava::byteArray& bodyIn, unsigned long groupIDIn);
+		};
+
 
 		struct dataInfo
 		{
@@ -99,12 +271,22 @@ namespace lava
 			unsigned long address = ULONG_MAX;
 
 			unsigned long length = ULONG_MAX;
-			
+
 			brawlReferenceVector entryReferences;
 			std::vector<dataInfo> entries{};
 
 			bool populate(lava::byteArray& bodyIn, std::size_t address);
 			bool exportContents(std::ostream& destinationStream);
+		};
+
+		struct wavePacket
+		{
+			unsigned long address = ULONG_MAX;
+			unsigned long length = ULONG_MAX;
+
+			std::vector<unsigned char> body{};
+
+			bool populate(lava::byteArray& bodyIn, unsigned long addressIn, unsigned long lengthIn);
 		};
 
 		struct waveInfo
@@ -127,7 +309,7 @@ namespace lava
 			unsigned long channelInfoTableLength = LONG_MAX;
 			std::vector<unsigned long> channelInfoTable{};
 
-			bool populate(lava::byteArray& bodyIn, std::size_t address);
+			bool populate(lava::byteArray& bodyIn, unsigned long addressIn);
 			bool exportContents(std::ostream& destinationStream);
 		};
 		struct rwsdWaveSection
@@ -175,108 +357,37 @@ namespace lava
 			bool exportContents(std::string destinationFile);
 		};
 
-		struct collectionInfo
+		struct brsarFileSection
 		{
 			unsigned long address = ULONG_MAX;
 
-			unsigned long fileID = ULONG_MAX;
-			unsigned long headerOffset = ULONG_MAX;
-			unsigned long headerLength = ULONG_MAX;
-			unsigned long dataOffset = ULONG_MAX;
-			unsigned long dataLength = ULONG_MAX;
-			unsigned long reserved = ULONG_MAX;
+			unsigned long length = ULONG_MAX;
+			std::vector<rwsd> rwsdEntries{};
 
-			bool populate(lava::byteArray& bodyIn, std::size_t address);
-			bool exportContents(std::ostream& destinationStream);
+			bool catalogueRWSD(lava::byteArray& bodyIn, std::size_t addressIn);
+			bool catalogueRWSDCheat(lava::byteArray& bodyIn, std::size_t addressIn);
+
+			bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
 		};
 
-		struct groupHeader
-		{
-			unsigned long address = ULONG_MAX;
 
-			unsigned long stringID = ULONG_MAX;
-			unsigned long entryNum = ULONG_MAX;
-			brawlReference extFilePathRef = ULLONG_MAX;
-			unsigned long headerOffset = ULONG_MAX;
-			unsigned long headerLength = ULONG_MAX;
-			unsigned long waveDataOffset = ULONG_MAX;
-			unsigned long waveDataLength = ULONG_MAX;
-			brawlReference listOffset = ULLONG_MAX;
-
-			bool populate(lava::byteArray& bodyIn, std::size_t address);
-			bool exportContents(std::ostream& destinationStream);
-		};
-
-		/*struct symbMaskEntry
-		{
-			unsigned short flags = USHRT_MAX;
-			unsigned short bit = USHRT_MAX;
-			unsigned long leftID = ULONG_MAX;
-			unsigned long rightID = ULONG_MAX;
-			unsigned long stringID = ULONG_MAX;
-			unsigned long index = ULONG_MAX;
-			bool populate(lava::byteArray& bodyIn, unsigned long addressIn)
-			{
-				bool result = 0;
-
-				if (bodyIn.populated())
-				{
-					std::size_t numGotten = 0;
-				}
-
-				return result;
-			}
-		};
-
-		struct symbMask
-		{
-			unsigned long address = ULONG_MAX;
-			unsigned long rootID = ULONG_MAX;
-			unsigned long numEntries = ULONG_MAX;
-
-			
-			std::vector<symbMaskEntry> entries{};
-		};*/
-
-		struct brsarSymbSection
-		{
-			unsigned int address = ULONG_MAX;
-
-			std::size_t symb_string_offset = SIZE_MAX;
-			std::size_t symb_sound_offset = SIZE_MAX;
-			std::size_t symb_types_offset = SIZE_MAX;
-			std::size_t symb_group_offset = SIZE_MAX;
-			std::size_t symb_banks_offset = SIZE_MAX;
-
-			std::vector<unsigned long> stringOffsets{};
-
-			bool populate(lava::byteArray& bodyIn, std::size_t address);
-		};
 
 		struct brsarFile
 		{
-			// Header Data
-			std::size_t symbAddress = SIZE_MAX;
-			std::size_t symbLength = SIZE_MAX;
-			brsarSymbSection symbSection;
-
-			std::size_t infoAddress = SIZE_MAX;
-			std::size_t infoLength = SIZE_MAX;
-
-			std::size_t fileAddress = SIZE_MAX;
-			std::size_t fileLength = SIZE_MAX;
-
-			std::size_t relocation_address = SIZE_MAX;
-			std::size_t group_num = SIZE_MAX;
-			std::size_t grprel_baseoff = SIZE_MAX;
-			std::size_t grid = SIZE_MAX;
-			std::size_t size = SIZE_MAX;
-
 			lava::byteArray contents;
-			bool init(std::string filePathIn);
-			std::size_t getGroupOffset(std::size_t groupIDIn, std::size_t* grakOut = nullptr);
 
+			brsarSymbSection symbSection;
+			brsarInfoSection infoSection;
+			brsarFileSection fileSection;
+
+			bool init(std::string filePathIn);
+
+			std::string getSymbString(unsigned long indexIn);
 			bool summarizeSymbStringData(std::ostream& output = std::cout);
+			bool outputConsecutiveSoundEntryStringsWithSameFileID(unsigned long startingIndex, std::ostream& output = std::cout);
+
+			unsigned long getGroupOffset(unsigned long groupIDIn);
+			bool listSoundsInGroup(unsigned long groupIDIn);
 
 			bool exportSawnd(std::size_t groupID, std::string targetFilePath = "sawnd.sawnd");
 		};
