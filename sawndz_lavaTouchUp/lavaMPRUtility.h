@@ -11,7 +11,7 @@
 #include <cctype>
 #include <algorithm>
 #include <iomanip>
-#include <map>
+#include <unordered_map>
 
 namespace lava
 {
