@@ -442,6 +442,8 @@ namespace lava
 				std::vector<std::pair<unsigned long, unsigned long>> sourceEntriesPushedOutByOverrides{};
 				std::vector<std::pair<unsigned long, unsigned long>> sourceEntriesPushedOutByOtherSounds{};
 				unsigned long successfulMatches = ULONG_MAX;
+
+				bool outputCorrespondenceData(std::ostream& output);
 			};
 
 			struct brsarFile
@@ -463,9 +465,9 @@ namespace lava
 
 				groupPortBundle getGroupPortBundle(groupFileInfo groupInfoIn);
 				groupPortSoundCorrespondence getGroupPortStringCorr(const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle);
-				bool portCorrespondingSounds(const groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle);
-
-				bool portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput = std::cout);
+				bool portCorrespondingSounds(const groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds = 0);
+				
+				bool portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput = std::cout, groupPortSoundCorrespondence* soundMappingOut = nullptr);
 
 				bool exportSawnd(std::size_t groupID, std::string targetFilePath = "sawnd.sawnd");
 			};

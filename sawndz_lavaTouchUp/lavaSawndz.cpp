@@ -1449,6 +1449,28 @@ namespace lava
 				return result;
 			}
 
+			bool groupPortSoundCorrespondence::outputCorrespondenceData(std::ostream& output)
+			{
+				bool result = 0;
+
+				if (output.good())
+				{
+					std::map<unsigned long, unsigned long> sortedIndeces{};
+					for (auto i : matches)
+					{
+						if (i.second.sourceGroupDataIndex.first != ULONG_MAX && i.second.sourceGroupDataIndex.second != ULONG_MAX)
+						{
+							sortedIndeces[i.second.sourceGroupInfoIndex] = i.second.destinationGroupInfoIndex;
+						}
+					}
+					for (auto i : sortedIndeces)
+					{
+						output << "0x" << lava::numToHexStringWithPadding(i.first, 0x04) << " 0x" << lava::numToHexStringWithPadding(i.second, 0x04) << "\n";
+					}
+				}
+
+				return result;
+			}
 
 			bool brsarFile::init(std::string filePathIn)
 			{
@@ -1702,11 +1724,12 @@ namespace lava
 						{
 							dataVectorPtr = &destinationGroupBundle.collectionRWSDs[i].dataSection.entries;
 							waveVectorPtr = &destinationGroupBundle.collectionRWSDs[i].waveSection.entries;
+							unsigned long firstSoundIndex = destinationGroupBundle.groupEntriesFirstSoundIndex[i];
 							for (std::size_t u = 0; u < dataVectorPtr->size(); u++)
 							{
 								dataPtr = &(*dataVectorPtr)[u];
 								wavePtr = &(*waveVectorPtr)[dataPtr->ntWaveIndex];
-								soundEffectNameIndex = 0x194 + destinationGroupBundle.groupEntriesFirstSoundIndex[i] + u;
+								soundEffectNameIndex = 0x194 + firstSoundIndex + u;
 								auto emplaceResult = result.matches.emplace(std::make_pair(shuckSoundEffectName(getSymbString(soundEffectNameIndex), &overrideUsedReceiver), groupPortEntryInfoBundle()));
 								currentEntry = &emplaceResult.first->second;
 								currentEntry->destinationGroupDataIndex = std::make_pair(i, u);
@@ -1718,12 +1741,13 @@ namespace lava
 						{
 							dataVectorPtr = &sourceGroupBundle.collectionRWSDs[i].dataSection.entries;
 							waveVectorPtr = &sourceGroupBundle.collectionRWSDs[i].waveSection.entries;
+							unsigned long firstSoundIndex = sourceGroupBundle.groupEntriesFirstSoundIndex[i];
 							for (std::size_t u = 0; u < dataVectorPtr->size(); u++)
 							{
 								shuckedName = "";
 								dataPtr = &(*dataVectorPtr)[u];
 								wavePtr = &(*waveVectorPtr)[dataPtr->ntWaveIndex];
-								soundEffectNameIndex = 0x194 + sourceGroupBundle.groupEntriesFirstSoundIndex[i] + u;
+								soundEffectNameIndex = 0x194 + firstSoundIndex + u;
 								unshuckedName = getSymbString(soundEffectNameIndex);
 								shuckedName = shuckSoundEffectName(unshuckedName, &overrideUsedReceiver);
 								auto findResult = result.matches.find(shuckedName);
@@ -1777,7 +1801,7 @@ namespace lava
 				return result;
 			}
 
-			bool brsarFile::portCorrespondingSounds(const groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle)
+			bool brsarFile::portCorrespondingSounds(const groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds)
 			{
 				bool result = 0;
 
@@ -1800,12 +1824,19 @@ namespace lava
 							copySourceData = &sourceGroupBundle.collectionRWSDs[copySourceCollIndex].dataSection.entries[copySourceDataIndex];
 							copySourceWave = &sourceGroupBundle.collectionRWSDs[copySourceCollIndex].waveSection.entries[copySourceData->ntWaveIndex];
 
-							unsigned long changeInSize = destinationGroupBundle.collectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave);
-							destinationGroupBundle.groupHeader.waveDataLength += changeInSize;
-							destinationGroupBundle.collections[copyDestCollIndex].dataLength += changeInSize;
-							if (copyDestCollIndex < destinationGroupBundle.collections.size() - 1)
+							if (portEmptySounds || copySourceWave->nibbles >= 3)
 							{
-								destinationGroupBundle.collections[copyDestCollIndex + 1].dataOffset += changeInSize;
+								unsigned long changeInSize = destinationGroupBundle.collectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave);
+								destinationGroupBundle.groupHeader.waveDataLength += changeInSize;
+								destinationGroupBundle.collections[copyDestCollIndex].dataLength += changeInSize;
+								if (copyDestCollIndex < destinationGroupBundle.collections.size() - 1)
+								{
+									destinationGroupBundle.collections[copyDestCollIndex + 1].dataOffset += changeInSize;
+								}
+							}
+							else
+							{
+								std::cerr << "Skipping empty sound!\n";
 							}
 						}
 					}
@@ -1815,7 +1846,7 @@ namespace lava
 				return result;
 			}
 
-			bool brsarFile::portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput)
+			bool brsarFile::portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput, groupPortSoundCorrespondence* soundMappingOut)
 			{
 				bool result = 0;
 
@@ -1876,6 +1907,10 @@ namespace lava
 										if (portCorrespondingSounds(soundCorr, sourceGroupBundle, destinationGroupBundle))
 										{
 											result = destinationGroupBundle.exportAsSawnd(contentsOutput);
+											if (soundMappingOut != nullptr)
+											{
+												*soundMappingOut = soundCorr;
+											}
 											//buildBundleFromSawnd(lava::numToHexStringWithPadding(destinationGroupBundle.groupID, 0x3) + ".sawnd");
 										}
 										else

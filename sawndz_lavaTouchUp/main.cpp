@@ -1184,24 +1184,25 @@ int main(int argc, char** argv)
 				lava::brawl::sawndz::brsarFile testBrsar;
 				testBrsar.init(brsarName);
 				std::ofstream log("portOutput.txt", std::ios_base::out);
+				//std::ofstream fileOut("sawnd_port_test.sawnd", std::ios_base::out | std::ios_base::binary);
 				//testBrsar.portGroupToGroup(lava::brawl::LAVA_CHARA_FIGHTER_IDS::LCFI_DONKEY_KONG, lava::brawl::LAVA_CHARA_FIGHTER_IDS::LCFI_SNAKE, fileOut, log);
 				for (auto i : lava::brawl::LAVA_CHARA_FID_TO_NAME)
 				{
 					std::cout << "Porting \"" << i.second << "\"...\n";
 					log << "Porting \"" << i.second << "\"...\n";
-					/*if (i.first == lava::brawl::LAVA_CHARA_FIGHTER_IDS::LCFI_FALCO)
-					{
-						int test = 0;
-					}*/
-					/*testBrsar.listSoundsInGroup(lava::brawl::sawndz::fighterIDToGroupInfoMap.find(i.first)->first, log);
-					log << "\n";*/
 					std::string outputFileName = "EX Soundbanks/" +
 						lava::numToHexStringWithPadding(lava::brawl::sawndz::fighterIDToGroupInfoMap.find(i.first)->second.groupID - 0x07, 0x03);
-					outputFileName += "_(" + i.second + "_EX).sawnd";
-					std::ofstream fileOut(outputFileName, std::ios_base::out | std::ios_base::binary);
+					outputFileName += "_(" + i.second + "_EX)";
+					std::ofstream fileOut(outputFileName + ".sawnd", std::ios_base::out | std::ios_base::binary);
 					if (fileOut.is_open())
 					{
-						testBrsar.portGroupToGroup(i.first, lava::brawl::LAVA_CHARA_FIGHTER_IDS::LCFI_SNAKE, fileOut, log);
+						lava::brawl::sawndz::groupPortSoundCorrespondence soundCorrReceiver;
+						testBrsar.portGroupToGroup(i.first, lava::brawl::LAVA_CHARA_FIGHTER_IDS::LCFI_SNAKE, fileOut, log, &soundCorrReceiver);
+						if (soundCorrReceiver.successfulMatches != ULONG_MAX)
+						{
+							std::ofstream soundCorrOut(outputFileName + "_sound.txt", std::ios_base::out);
+							soundCorrReceiver.outputCorrespondenceData(soundCorrOut);
+						}
 						log << "\n";
 					}
 				}
