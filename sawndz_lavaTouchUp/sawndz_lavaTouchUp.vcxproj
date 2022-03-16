@@ -148,6 +148,7 @@
     <Text Include="Notes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lavaBrawlConstants.h" />
     <ClInclude Include="lavaByteArray.h" />
     <ClInclude Include="lavaMPRUtility.h" />
     <ClInclude Include="lavaSawndz.h" />
