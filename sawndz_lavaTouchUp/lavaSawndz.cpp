@@ -1904,7 +1904,7 @@ namespace lava
 										sourceGroupBundle.populateAllWavePackets(contents);
 										destinationGroupBundle.populateAllWavePackets(contents);
 
-										if (portCorrespondingSounds(soundCorr, sourceGroupBundle, destinationGroupBundle))
+										if (portCorrespondingSounds(soundCorr, sourceGroupBundle, destinationGroupBundle, 1))
 										{
 											result = destinationGroupBundle.exportAsSawnd(contentsOutput);
 											if (soundMappingOut != nullptr)
