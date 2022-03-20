@@ -116,7 +116,7 @@ namespace lava
 		// Comment out the below to use typical English names.
 #define USE_INTERNAL_NAMES
 # ifdef USE_INTERNAL_NAMES
-		const std::unordered_map<std::size_t, std::string> LAVA_CHARA_FID_TO_NAME = {
+		const std::unordered_map<unsigned long, std::string> LAVA_CHARA_FID_TO_NAME = {
 			{ LCFI_CAPTAIN_FALCON, "CAPTAIN" },
 			{ LCFI_DEDEDE, "DEDEDE" },
 			{ LCFI_DIDDY_KONG, "DIDDY" },
@@ -169,7 +169,7 @@ namespace lava
 			//{ LCFI_WALUIGI, "WALUIGI" },
 		};
 #else
-		const std::unordered_map<std::size_t, std::string> LAVA_CHARA_FID_TO_NAME = {
+		const std::unordered_map<unsigned long, std::string> LAVA_CHARA_FID_TO_NAME = {
 			{ LCFI_BOWSER, "BOWSER" },
 			{ LCFI_CAPTAIN_FALCON, "CAPTAIN_FALCON" },
 			{ LCFI_CHARIZARD, "CHARIZARD" },
