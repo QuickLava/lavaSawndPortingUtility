@@ -15,7 +15,7 @@ namespace lava
 		bool _populated = 0;
 
 		template<typename objectType>
-		std::vector<unsigned char> typeToBytes(objectType& objectIn, bool reverse)
+		std::vector<unsigned char> typeToBytes(objectType& objectIn, bool reverse) const
 		{
 			std::vector<unsigned char> result = std::vector<unsigned char>((unsigned char*)(&objectIn), (unsigned char*)(&objectIn) + sizeof(objectType));
 			if (reverse)
@@ -26,7 +26,7 @@ namespace lava
 		}
 
 		template<typename objectType>
-		objectType bytesToType(std::vector<unsigned char> bytesIn, bool reverse)
+		objectType bytesToType(std::vector<unsigned char> bytesIn, bool reverse) const
 		{
 			objectType result = ULONG_MAX;
 			if (reverse)
@@ -41,7 +41,7 @@ namespace lava
 		std::vector<char> body = {};
 	private:
 		template<typename objectType>
-		objectType getObj(std::size_t startIndex)
+		objectType getObj(std::size_t startIndex) const
 		{
 			objectType result = SIZE_MAX;
 			std::size_t numGotten = 0;
@@ -74,7 +74,7 @@ namespace lava
 		}
 
 		template<typename objectType>
-		std::size_t findObj(const objectType& objectIn, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX)
+		std::size_t findObj(const objectType& objectIn, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const
 		{
 			std::size_t result = 0;
 			if (startItr < body.size())
@@ -85,7 +85,7 @@ namespace lava
 		}
 
 		template<typename objectType>
-		std::vector<std::size_t> findObjMultiple(const objectType& objectIn, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX)
+		std::vector<std::size_t> findObjMultiple(const objectType& objectIn, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const
 		{
 			std::vector<std::size_t> result{};
 			if (startItr < body.size())
@@ -97,15 +97,15 @@ namespace lava
 
 	public:
 		void populate(std::istream& sourceStream);
-		bool populated();
+		bool populated() const;
 
-		std::vector<unsigned char> getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGot);
-		unsigned long long int getLLong(std::size_t startIndex);
-		unsigned long int getLong(std::size_t startIndex);
-		unsigned short int getShort(std::size_t startIndex);
-		unsigned char getChar(std::size_t startIndex);
-		double getDouble(std::size_t startIndex);
-		float getFloat(std::size_t startIndex);
+		std::vector<unsigned char> getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGot) const;
+		unsigned long long int getLLong(std::size_t startIndex) const;
+		unsigned long int getLong(std::size_t startIndex) const;
+		unsigned short int getShort(std::size_t startIndex) const;
+		unsigned char getChar(std::size_t startIndex) const;
+		double getDouble(std::size_t startIndex) const;
+		float getFloat(std::size_t startIndex) const;
 
 		bool setBytes(std::vector<unsigned char> bytesIn, std::size_t atIndex);
 		bool setLLong(unsigned long long int valueIn, std::size_t atIndex);
@@ -123,23 +123,23 @@ namespace lava
 		bool insertDouble(double valueIn, std::size_t atIndex);
 		bool insertFloat(float valueIn, std::size_t atIndex);
 
-		std::size_t search(const std::vector<unsigned char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::size_t searchLLong(unsigned long long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::size_t searchLong(unsigned long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::size_t searchShort(unsigned short int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::size_t searchChar(unsigned char searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::size_t searchDouble(double searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::size_t searchFloat(float searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
+		std::size_t search(const std::vector<unsigned char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::size_t searchLLong(unsigned long long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::size_t searchLong(unsigned long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::size_t searchShort(unsigned short int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::size_t searchChar(unsigned char searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::size_t searchDouble(double searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::size_t searchFloat(float searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
 
-		std::vector<std::size_t> searchMultiple(const std::vector<unsigned char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::vector<std::size_t> searchMultipleLLong(unsigned long long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::vector<std::size_t> searchMultipleLong(unsigned long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::vector<std::size_t> searchMultipleShort(unsigned short int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::vector<std::size_t> searchMultipleChar(unsigned char searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::vector<std::size_t> searchMultipleDouble(double searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
-		std::vector<std::size_t> searchMultipleFloat(float searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX);
+		std::vector<std::size_t> searchMultiple(const std::vector<unsigned char>& searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::vector<std::size_t> searchMultipleLLong(unsigned long long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::vector<std::size_t> searchMultipleLong(unsigned long int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::vector<std::size_t> searchMultipleShort(unsigned short int searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::vector<std::size_t> searchMultipleChar(unsigned char searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::vector<std::size_t> searchMultipleDouble(double searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
+		std::vector<std::size_t> searchMultipleFloat(float searchCriteria, std::size_t startItr = 0, std::size_t endItr = SIZE_MAX) const;
 
-		bool dumpToFile(std::string targetPath);
+		bool dumpToFile(std::string targetPath) const;
 	};
 }
 

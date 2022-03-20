@@ -13,12 +13,12 @@ namespace lava
 		sourceStream.read(body.data(), sourceSize);
 		std::cout << "Loaded " << body.size() << " byte(s) of data.\n";
 	}
-	bool byteArray::populated()
+	bool byteArray::populated() const
 	{
 		return _populated;
 	}
 
-	std::vector<unsigned char> byteArray::getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGotten)
+	std::vector<unsigned char> byteArray::getBytes(std::size_t numToGet, std::size_t startIndex, std::size_t& numGotten) const
 	{
 		numGotten = 0;
 		if (startIndex < body.size())
@@ -37,27 +37,27 @@ namespace lava
 		}
 		return std::vector<unsigned char>();
 	}
-	unsigned long long int byteArray::getLLong(std::size_t startIndex)
+	unsigned long long int byteArray::getLLong(std::size_t startIndex) const
 	{
 		return getObj<unsigned long long int>(startIndex);
 	}
-	unsigned long int byteArray::getLong(std::size_t startIndex)
+	unsigned long int byteArray::getLong(std::size_t startIndex) const
 	{
 		return getObj<unsigned long int>(startIndex);
 	}
-	unsigned short int byteArray::getShort(std::size_t startIndex)
+	unsigned short int byteArray::getShort(std::size_t startIndex) const
 	{
 		return getObj<unsigned short int>(startIndex);
 	}
-	unsigned char byteArray::getChar(std::size_t startIndex)
+	unsigned char byteArray::getChar(std::size_t startIndex) const
 	{
 		return getObj<unsigned char>(startIndex);
 	}
-	double byteArray::getDouble(std::size_t startIndex)
+	double byteArray::getDouble(std::size_t startIndex) const
 	{
 		return getObj<double>(startIndex);
 	}
-	float byteArray::getFloat(std::size_t startIndex)
+	float byteArray::getFloat(std::size_t startIndex) const
 	{
 		return getObj<float>(startIndex);
 	}
@@ -152,9 +152,9 @@ namespace lava
 		return insertObj<float>(valueIn, atIndex);
 	}
 
-	std::size_t byteArray::search(const std::vector<unsigned char>& searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::search(const std::vector<unsigned char>& searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
-		std::vector<char>::iterator itr = body.end();
+		std::vector<char>::const_iterator itr = body.end();
 		std::vector<char>* searchCriteriaSigned = ((std::vector<char>*) &searchCriteria);
 		if (endItr < startItr)
 		{
@@ -170,32 +170,32 @@ namespace lava
 		}
 		return (itr != body.end()) ? itr - body.begin() : SIZE_MAX;
 	}
-	std::size_t byteArray::searchLLong(unsigned long long int searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::searchLLong(unsigned long long int searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObj<unsigned long long int>(searchCriteria, startItr, endItr);
 	}
-	std::size_t byteArray::searchLong(unsigned long int searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::searchLong(unsigned long int searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObj<unsigned long int>(searchCriteria, startItr, endItr);
 	}
-	std::size_t byteArray::searchShort(unsigned short int searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::searchShort(unsigned short int searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObj<unsigned short>(searchCriteria, startItr, endItr);
 	}
-	std::size_t byteArray::searchChar(unsigned char searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::searchChar(unsigned char searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObj<unsigned char>(searchCriteria, startItr, endItr);
 	}
-	std::size_t byteArray::searchDouble(double searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::searchDouble(double searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObj<double>(searchCriteria, startItr, endItr);
 	}
-	std::size_t byteArray::searchFloat(float searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::size_t byteArray::searchFloat(float searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObj<float>(searchCriteria, startItr, endItr);
 	}
 
-	std::vector<std::size_t> byteArray::searchMultiple(const std::vector<unsigned char>& searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultiple(const std::vector<unsigned char>& searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		std::size_t cursor = startItr;
 		std::vector<std::size_t> result;
@@ -219,32 +219,32 @@ namespace lava
 		}
 		return result;
 	}
-	std::vector<std::size_t> byteArray::searchMultipleLLong(unsigned long long int searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultipleLLong(unsigned long long int searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObjMultiple<unsigned long long int>(searchCriteria, startItr, endItr);
 	}
-	std::vector<std::size_t> byteArray::searchMultipleLong(unsigned long int searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultipleLong(unsigned long int searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObjMultiple<unsigned long int>(searchCriteria, startItr, endItr);
 	}
-	std::vector<std::size_t> byteArray::searchMultipleShort(unsigned short int searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultipleShort(unsigned short int searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObjMultiple<unsigned short>(searchCriteria, startItr, endItr);
 	}
-	std::vector<std::size_t> byteArray::searchMultipleChar(unsigned char searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultipleChar(unsigned char searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObjMultiple<unsigned char>(searchCriteria, startItr, endItr);
 	}
-	std::vector<std::size_t> byteArray::searchMultipleDouble(double searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultipleDouble(double searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObjMultiple<double>(searchCriteria, startItr, endItr);
 	}
-	std::vector<std::size_t> byteArray::searchMultipleFloat(float searchCriteria, std::size_t startItr, std::size_t endItr)
+	std::vector<std::size_t> byteArray::searchMultipleFloat(float searchCriteria, std::size_t startItr, std::size_t endItr) const
 	{
 		return findObjMultiple<float>(searchCriteria, startItr, endItr);
 	}
 
-	bool byteArray::dumpToFile(std::string targetPath)
+	bool byteArray::dumpToFile(std::string targetPath) const
 	{
 		bool result = 0;
 		std::ofstream output;
