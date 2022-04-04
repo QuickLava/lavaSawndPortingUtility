@@ -1,19 +1,20 @@
 #ifndef LAVA_SAWNDZ_REIMP_H_V1
-#define LAVA_SAWNDZ_REIMP_H_V2
+#define LAVA_SAWNDZ_REIMP_H_V1
 
 #include "lavaByteArray.h"
-#include "lavaMPRUtility.h"
+#include "lavaSPUUtility.h"
 #include "lavaBrawlConstants.h"
 
 namespace lava
 {
-	bool printError(int errnoIn);
-
 	template<typename objectType>
-	bool writeRawDataToStream(std::ostream& out, const objectType& objectIn)
+	bool writeRawDataToStream(std::ostream& out, const objectType& objectIn, bool doReverse = 1)
 	{
 		std::vector<char> temp((char*)(&objectIn), (char*)(&objectIn) + sizeof(objectType));
-		std::reverse(temp.begin(), temp.end());
+		if (doReverse)
+		{
+			std::reverse(temp.begin(), temp.end());
+		}
 		out.write(temp.data(), sizeof(objectType));
 		return out.good();
 	}
@@ -21,13 +22,22 @@ namespace lava
 	unsigned long countCharInString(const std::string& stringIn, char searchIn);
 	std::size_t findNthInString(const std::string& stringIn, char searchIn, unsigned long n);
 
-
 	namespace brawl
 	{
 		namespace sawndz
 		{
+			const std::string version = "v0.85";
 			const unsigned long _HEX_TAG_RWSD = 0x52575344;
 			const unsigned long _NOT_IN_FILE_ADDRESS = 0xDEADBEEF;
+			const unsigned long _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE = 0xDEADDEED;
+
+			enum class rsarFileSectionType
+			{
+				rFST_RWSD = 0,
+				rFST_RBNK,
+				rFST_RSEQ,
+				rsarFileSectionTypeCount
+			};
 
 			struct groupFileInfo
 			{
@@ -40,6 +50,7 @@ namespace lava
 			};
 			extern std::unordered_map<unsigned long, groupFileInfo> fighterIDToGroupInfoMap;
 			extern std::unordered_map<std::string, std::string> soundEffectNameOverrides;
+			bool populateSoundEffectNameOverrides(std::string overrideFilePathIn);
 			std::string shuckSoundEffectName(std::string nameIn, std::unordered_map<std::string, std::string>::iterator* overrideUsedOut = nullptr);
 
 			struct brawlReference
@@ -305,6 +316,7 @@ namespace lava
 				bool populated = 0;
 
 				unsigned long address = ULONG_MAX;
+
 				unsigned long length = ULONG_MAX;
 				unsigned long paddingLength = ULONG_MAX;
 
@@ -349,7 +361,6 @@ namespace lava
 				std::vector<unsigned long> entryOffsets{};
 				std::vector<waveInfo> entries{};
 
-				//bool insertEntry(unsigned long atIndex, const waveInfo& entryIn);
 				void pushEntry(const waveInfo& entryIn);
 
 				bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
@@ -386,11 +397,10 @@ namespace lava
 				bool isFirstToUseWave(unsigned long dataSectionIndex);
 				waveInfo* getWaveInfoAssociatedWithDataInfo(unsigned long dataSectionIndex);
 				bool populateWavePacket(lava::byteArray& bodyIn, unsigned long parentGroupWaveDataAddress, unsigned long collectionDataOffset, unsigned long dataSectionIndex);
-				signed long overwriteSound(unsigned long dataSectionIndex, const dataInfo& dataInfoIn, const waveInfo& waveInfoIn);
+				signed long overwriteSound(unsigned long dataSectionIndex, const dataInfo& dataInfoIn, const waveInfo& waveInfoIn, bool allowSharedWaveSplit = 0);
 
 				bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
 				bool exportContents(std::ostream& destinationStream);
-				bool exportContents(std::string destinationFile);
 			};
 
 			struct brsarFileSection
@@ -406,8 +416,7 @@ namespace lava
 				bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
 			};
 
-			
-
+			/*
 			struct groupPortBundle
 			{
 				bool populatedSuccessfully = 0;
@@ -424,7 +433,6 @@ namespace lava
 				bool populateAllWavePackets(lava::byteArray& bodyIn);
 				bool exportAsSawnd(std::ostream& outputStream);
 			};
-
 			struct groupPortEntryInfoBundle
 			{
 				bool sourceGroupDataIndexLocked = 0;
@@ -435,16 +443,31 @@ namespace lava
 				std::pair<unsigned long, unsigned long> destinationGroupDataIndex = { ULONG_MAX, ULONG_MAX };
 			};
 
+			enum class groupPortSoundCorrErrorCode
+			{
+				sCEC_NULL = 0x00,
+				sCEC_NO_MATCH,
+				sCEC_PUSHED_BY_OTHER,
+				sCEC_PUSHED_BY_OVERRIDE,
+				sCEC_SHARED_WAVE,
+			};
+
+			struct groupPortEntryErrorBundle
+			{
+				unsigned long sourceGroupInfoIndex = ULONG_MAX;
+				std::pair<unsigned long, unsigned long> sourceGroupDataIndex = { ULONG_MAX, ULONG_MAX };
+			};
 			struct groupPortSoundCorrespondence
 			{
 				std::unordered_map<std::string, groupPortEntryInfoBundle> matches{};
-				std::vector<std::pair<unsigned long, unsigned long>> sourceEntriesWithNoMatch{};
-				std::vector<std::pair<unsigned long, unsigned long>> sourceEntriesPushedOutByOverrides{};
-				std::vector<std::pair<unsigned long, unsigned long>> sourceEntriesPushedOutByOtherSounds{};
+				//std::map<groupPortSoundCorrErrorCode, std::vector<std::pair<unsigned long, unsigned long>>> failedMatches{};
+				std::map<groupPortSoundCorrErrorCode, std::vector<groupPortEntryErrorBundle>> failedMatches{};
 				unsigned long successfulMatches = ULONG_MAX;
 
 				bool outputCorrespondenceData(std::ostream& output);
+				bool summarizeResults(std::ostream& output);
 			};
+			*/
 
 			struct brsarFile
 			{
@@ -463,16 +486,29 @@ namespace lava
 				unsigned long getGroupOffset(unsigned long groupIDIn);
 				bool listSoundsInGroup(unsigned long groupIDIn, std::ostream& output = std::cout);
 
-				groupPortBundle getGroupPortBundle(groupFileInfo groupInfoIn);
-				groupPortSoundCorrespondence getGroupPortStringCorr(const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle);
-				bool portCorrespondingSounds(const groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds = 0);
+				/*groupPortBundle getGroupPortBundle(groupFileInfo groupInfoIn);
+				groupPortSoundCorrespondence getGroupPortSoundCorr(const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle);
+				bool portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds = 1, bool allowSharedDestinationWaveSplit = 0);
 				
-				bool portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput = std::cout, groupPortSoundCorrespondence* soundMappingOut = nullptr);
+				bool portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput = std::cout, groupPortSoundCorrespondence* soundMappingOut = nullptr);*/
 
-				bool exportSawnd(std::size_t groupID, std::string targetFilePath = "sawnd.sawnd");
+				bool exportSawnd(std::size_t groupID, std::string targetFilePath);
 			};
 
-			groupPortBundle buildBundleFromSawnd(std::string filePathIn);
+			struct sawndHeader
+			{
+				unsigned char address = ULONG_MAX;
+
+				unsigned char sawndVersion = ULONG_MAX;
+				unsigned long groupID = ULONG_MAX;
+				unsigned long waveDataLength = ULONG_MAX;
+
+				std::vector<std::array<unsigned long, 3>> fileInfoTriples{};
+
+				bool populate(const lava::byteArray& bodyIn, unsigned long addressIn);
+			};
+			//groupPortBundle buildBundleFromSawnd(std::string filePathIn);
+			bool summarizeSawndMetadata(std::string filePathIn, std::ostream& output = std::cout);
 		}
 	}
 }

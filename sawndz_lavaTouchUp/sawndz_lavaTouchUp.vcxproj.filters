@@ -21,10 +21,16 @@
     <ClCompile Include="lavaSawndz.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lavaMPRUtility.cpp">
+    <ClCompile Include="lavaSPUUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lavaByteArray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="oldSawndz.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lavaSawndPortingUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -37,13 +43,16 @@
     <ClInclude Include="lavaSawndz.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lavaMPRUtility.h">
+    <ClInclude Include="lavaSPUUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lavaByteArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lavaBrawlConstants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lavaSawndPortingUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

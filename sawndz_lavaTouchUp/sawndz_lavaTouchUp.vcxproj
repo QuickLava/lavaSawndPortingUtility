@@ -140,17 +140,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="lavaByteArray.cpp" />
-    <ClCompile Include="lavaMPRUtility.cpp" />
+    <ClCompile Include="lavaSawndPortingUtility.cpp" />
+    <ClCompile Include="lavaSPUUtility.cpp" />
     <ClCompile Include="lavaSawndz.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="oldSawndz.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Notes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lavaSawndPortingUtility.h" />
     <ClInclude Include="lavaBrawlConstants.h" />
     <ClInclude Include="lavaByteArray.h" />
-    <ClInclude Include="lavaMPRUtility.h" />
+    <ClInclude Include="lavaSPUUtility.h" />
     <ClInclude Include="lavaSawndz.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

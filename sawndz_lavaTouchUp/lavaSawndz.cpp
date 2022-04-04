@@ -2,18 +2,6 @@
 
 namespace lava
 {
-	// Returns 1 if the specified err message was cut off
-	bool printError(int errnoIn)
-	{
-		std::vector<char> errorMessageBuffer{};
-		// I'm currently hardcoding the err buffer to 32, because Visual Studio doesn't have an implementation of strerrorlen_s to properly check the length of the message.
-		errorMessageBuffer.resize(32);
-		// Get the message and store it in errorMessageBuffer, recording whether the message got cut off
-		bool fullMessageGotten = strerror_s(errorMessageBuffer.data(), 32, errno);
-		std::cerr << std::string(errorMessageBuffer.data());
-		return fullMessageGotten;
-	}
-
 	unsigned long countCharInString(const std::string& stringIn, char searchIn)
 	{
 		unsigned long count = 0;
@@ -113,76 +101,62 @@ namespace lava
 				{ LCFI_ZELDA, { 24, {481, 253}}},
 			};
 
-			std::unordered_map<std::string, std::string> soundEffectNameOverrides =
+			std::unordered_map<std::string, std::string> soundEffectNameOverrides{};
+			bool populateSoundEffectNameOverrides(std::string overrideFilePathIn)
 			{
-				// Meta Knight & Pit Overrides
-				{"snd_vc_atk01", "snd_vc_Attack01"},
-				{"snd_vc_atk02", "snd_vc_Attack02"},
-				{"snd_vc_atk03", "snd_vc_Attack03"},
-				{"snd_vc_atk04", "snd_vc_Attack04"},
-				{"snd_vc_atk05", "snd_vc_Attack05"},
-				{"snd_vc_atk06", "snd_vc_Attack06"},
-				{"snd_vc_atk07", "snd_vc_Attack07"},
-				{"snd_vc_hoshikie", "snd_vc_Damage_hoshikie"},
-				{"snd_vc_damage_s", "snd_vc_Damage01"},
-				{"snd_vc_damage_l", "snd_vc_Damage02"},
-				{"snd_vc_futtobi_l01", "snd_vc_DamageFly01"},
-				{"snd_vc_futtobi_l02", "snd_vc_DamageFly02"},
-				{"snd_vc_futtobi_l02", "snd_vc_DamageFly02"},
-				{"snd_vc_mizu_tobidashi", "snd_vc_SwimUp"},
-				{"snd_vc_miss01", "snd_vc_MissFoot01"},
-				{"snd_vc_miss02", "snd_vc_MissFoot02"},
-				{"snd_vc_fura", "snd_vc_FuraFura"},
-				{"snd_vc_otto", "snd_vc_Ottotto"},
-				{"snd_vc_nemuru", "snd_vc_FuraSleep"},
-				{"snd_vc_gake", "snd_vc_CliffCatch"},
-				{"snd_vc_mochiage", "snd_vc_HeavyGet"},
-				{"snd_vc_ukemi", "snd_vc_Passive"},
-				// Meta Knight & Pit Overrides (Destructive)
-				{"snd_vc_atk_hyaku", "snd_vc_001"},
-				{"snd_vc_hissatu_n", "snd_vc_002"},
-				{"snd_vc_hissatu_ue", "snd_vc_002"},
-				{"snd_vc_hissatu_yoko", "snd_vc_003"},
-				{"snd_vc_hissatu_shita", "snd_vc_004"},
-				{"snd_vc_hissatu_shita01", "snd_vc_004"},
-				{"snd_vc_hissatu_shita02", "snd_vc_005"},
-				{"snd_vc_kakkuu", "snd_vc_005"},
-				{"snd_vc_hissatu_cyo01", "snd_vc_006"},
-				{"snd_vc_hissatu_cyo02", "snd_vc_007"},
-				{"snd_vc_hissatu_cyo03", "snd_vc_008"},
-				{"snd_vc_hissatu_cyo03", "snd_vc_008"},
-				{"snd_vc_win04", "snd_vc_009"},
-				// Dedede Overrides
-				{"snd_se_hammer_Attack_l", "snd_se_Attack_l"},
-				{"snd_se_hammer_Attack_ll", "snd_se_Attack_ll"},
-				{"snd_se_hammer_Attack_m", "snd_se_Attack_m"},
-				{"snd_se_hammer_Attack_s", "snd_se_Attack_s"},
-				{"snd_se_hammer_Attack100", "snd_se_Attack100"},
-				{"snd_se_hammer_swing_l", "snd_se_swing_l"},
-				{"snd_se_hammer_swing_ll", "snd_se_swing_ll"},
-				{"snd_se_hammer_swing_m", "snd_se_swing_m"},
-				{"snd_se_hammer_swing_s", "snd_se_swing_s"},
-				// Dedede Overrides (Destructive)
-				{"snd_se_hammer_Attack_earth", "snd_se_024"},
-				{"snd_se_hammer_spin_body", "snd_se_025"},
-				{"snd_se_hammer_spin_head", "snd_se_026"},
-				// Donkey Kong Overrides
-				{"snd_se_TCB_perfect", "snd_se_025"},
-				// Donkey Kong Overrides (Destructive)
-				{"snd_se_Final_Conga_l", "snd_se_026"},
-				{"snd_se_Final_Conga_r", "snd_se_027"},
-				// Donkey Kong Overrides (Dangerous)
-				{"snd_se_Final_Claps", "snd_se_028"},
-				// Falco Overrides
-				{"snd_vc_Win_Fox", "snd_vc_008"},
-				// Fox Overrides
-				{"snd_vc_Win_Falco", "snd_vc_005"},
-				// Peach Overrides
-				{"snd_se_Attack_Binta", "snd_se_005"},
-				{"snd_se_Attack_Smash01_Fryingpan", "snd_se_006"},
-				{"snd_se_Attack_Smash02_Golfclub", "snd_se_007"},
-				{"snd_se_Attack_Smash03_Tennisracket", "snd_se_008"},
-			};
+				bool result = 0;
+
+				std::ifstream overridesIn(overrideFilePathIn, std::ios_base::in);
+				if (overridesIn.is_open())
+				{
+					result = 1;
+					std::string currentLine = "";
+					std::string manipStr = "";
+					while (std::getline(overridesIn, currentLine))
+					{
+						// Disregard the current line if it's empty, or is marked as a comment
+						if (!currentLine.empty() && currentLine[0] != '#' && currentLine[0] != '/')
+						{
+							manipStr = "";
+							bool inQuote = 0;
+							bool doEscapeChar = 0;
+							for (std::size_t i = 0; i < currentLine.size(); i++)
+							{
+								if (currentLine[i] == '\"' && !doEscapeChar)
+								{
+									inQuote = !inQuote;
+								}
+								else if (currentLine[i] == '\\')
+								{
+									doEscapeChar = 1;
+								}
+								else if (inQuote || !std::isspace(currentLine[i]))
+								{
+									doEscapeChar = 0;
+									manipStr += currentLine[i];
+								}
+							}
+
+							std::size_t nameIDDelimLoc = manipStr.find(',');
+							if (nameIDDelimLoc != std::string::npos && nameIDDelimLoc < (manipStr.size() - 1))
+							{
+								auto emplaceResult = soundEffectNameOverrides.emplace(std::make_pair(manipStr.substr(0, nameIDDelimLoc), manipStr.substr(nameIDDelimLoc + 1, std::string::npos)));
+
+								if (!emplaceResult.second)
+								{
+									std::cerr << "";
+									emplaceResult.first->second = manipStr.substr(nameIDDelimLoc + 1, std::string::npos);
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					std::cerr << "Unable to parse Sound Name Overrides from \"" << overrideFilePathIn << "\": couldn't open file.\n";
+				}
+				return result;
+			}
 			std::string shuckSoundEffectName(std::string nameIn, std::unordered_map<std::string, std::string>::iterator* overrideUsedOut)
 			{
 				std::string result = "";
@@ -201,8 +175,7 @@ namespace lava
 					}
 					else
 					{
-						result = nameIn.substr(0, findNthInString(nameIn, '_', 2)) + nameIn.substr(findNthInString(nameIn, '_', 3));
-						std::unordered_map<std::string, std::string>::iterator findResult = soundEffectNameOverrides.find(result);
+						std::unordered_map<std::string, std::string>::iterator findResult = soundEffectNameOverrides.find(nameIn);
 						if (findResult != soundEffectNameOverrides.end())
 						{
 							result = findResult->second;
@@ -213,6 +186,7 @@ namespace lava
 						}
 						else
 						{
+							result = nameIn.substr(0, findNthInString(nameIn, '_', 2)) + nameIn.substr(findNthInString(nameIn, '_', 3));
 							if (overrideUsedOut != nullptr)
 							{
 								*overrideUsedOut = soundEffectNameOverrides.end();
@@ -378,10 +352,10 @@ namespace lava
 					groupsOffset = bodyIn.getLong(address + 0x14);
 					banksOffset = bodyIn.getLong(address + 0x18);
 
-					soundsMaskHeader.populate(bodyIn, address + 0x08 + soundsOffset);
+					/*soundsMaskHeader.populate(bodyIn, address + 0x08 + soundsOffset);
 					typesMaskHeader.populate(bodyIn, address + 0x08 + typesOffset);
 					groupsMaskHeader.populate(bodyIn, address + 0x08 + groupsOffset);
-					banksMaskHeader.populate(bodyIn, address + 0x08 + banksOffset);
+					banksMaskHeader.populate(bodyIn, address + 0x08 + banksOffset);*/
 
 					unsigned long cursor = address + 0x08 + stringOffset;
 					stringOffsets.resize(bodyIn.getLong(cursor), ULONG_MAX);
@@ -809,7 +783,6 @@ namespace lava
 					unsigned long lengthOfExport = finalStreamPos - initialStreamPos;
 					if (lengthOfExport != length)
 					{
-						std::cerr << "Export length != length! Something may have gone wrong somewhere.\n";
 						if (lengthOfExport < length)
 						{
 							std::vector<char> padding{};
@@ -846,11 +819,6 @@ namespace lava
 				return result;
 			}
 
-			/*waveInfo::waveInfo(const waveInfo& rightHand) 
-			{
-				copyOverWaveInfoProperties(rightHand);
-				address = rightHand.address;
-			}*/
 			unsigned long waveInfo::getLengthInBytes() const
 			{
 				unsigned long result = ULONG_MAX;
@@ -858,7 +826,7 @@ namespace lava
 				if (address != ULONG_MAX)
 				{
 					auto divResult = ldiv(nibbles, 2);
-					result = divResult.quot + divResult.rem;
+					result = divResult.quot + 1;
 				}
 
 				return result;
@@ -942,21 +910,21 @@ namespace lava
 				return result;
 			}
 
-			/*bool rwsdWaveSection::insertEntry(unsigned long atIndex, const waveInfo& entryIn)
-			{
-				bool result = 0;
-
-				if (atIndex < entries.size())
-				{
-					entries.insert(entries.begin() + atIndex, entryIn);
-					entries[atIndex].address = _NOT_IN_FILE_ADDRESS;
-					entryIn.channelInfoTableLength;
-				}
-
-				return result;
-			}*/
 			void rwsdWaveSection::pushEntry(const waveInfo& entryIn)
 			{
+				if (!entryOffsets.empty())
+				{
+					for (unsigned long i = 0; i < entryOffsets.size(); i++)
+					{
+						entryOffsets[i] += 0x04;
+					}
+					entryOffsets.push_back(entryOffsets.back() + 0x1C + entryIn.channelInfoTableLength);
+				}
+				else
+				{
+					entryOffsets.push_back(0x10);
+				}
+
 				entries.push_back(entryIn);
 				entries.back().address = _NOT_IN_FILE_ADDRESS;
 				if (entries.size() > 1)
@@ -973,18 +941,7 @@ namespace lava
 				{
 					entries.back().dataLocation = 0x00;
 				}
-				if (!entryOffsets.empty())
-				{
-					for (unsigned long i = 0; i < entryOffsets.size(); i++)
-					{
-						entryOffsets[i] += 0x04;
-					}
-					entryOffsets.push_back(entryOffsets.back() + 0x1C + entryIn.channelInfoTableLength);
-				}
-				else
-				{
-					entryOffsets.push_back(0x10);
-				}
+				
 				length += 0x04 + 0x1C + entryIn.channelInfoTableLength;
 			}
 
@@ -1016,6 +973,8 @@ namespace lava
 				bool result = 0;
 				if (destinationStream.good())
 				{
+					unsigned long initialStreamPos = destinationStream.tellp();
+
 					destinationStream << "WAVE";
 					lava::writeRawDataToStream(destinationStream, length);
 					lava::writeRawDataToStream(destinationStream, entries.size());
@@ -1027,6 +986,18 @@ namespace lava
 					for (unsigned long i = 0x0; i < entries.size(); i++)
 					{
 						entries[i].exportContents(destinationStream);
+					}
+
+					unsigned long finalStreamPos = destinationStream.tellp();
+					unsigned long lengthOfExport = finalStreamPos - initialStreamPos;
+					if (lengthOfExport != length)
+					{
+						if (lengthOfExport < length)
+						{
+							std::vector<char> padding{};
+							padding.resize(length - lengthOfExport, 0x00);
+							destinationStream.write(padding.data(), padding.size());
+						}
 					}
 
 					result = destinationStream.good();
@@ -1048,10 +1019,10 @@ namespace lava
 					entriesCount = bodyIn.getShort(addressIn + 0x0E);
 
 					dataOffset = bodyIn.getLong(addressIn + 0x10);
-					dataLength = bodyIn.getLong(addressIn + 0x14);
-					waveOffset = bodyIn.getLong(addressIn + 0x18);
-					waveLength = bodyIn.getLong(addressIn + 0x1C);
-					result = 1;
+dataLength = bodyIn.getLong(addressIn + 0x14);
+waveOffset = bodyIn.getLong(addressIn + 0x18);
+waveLength = bodyIn.getLong(addressIn + 0x1C);
+result = 1;
 				}
 
 				return result;
@@ -1146,11 +1117,13 @@ namespace lava
 							result = associatedWaveInfo->packetContents.populate(bodyIn, waveDataStartLocation, waveDataLength);
 							if (associatedDataInfo->ntWaveIndex < (waveSection.entries.size() - 1))
 							{
-								associatedWaveInfo->packetContents.paddingLength = waveSection.entries[associatedDataInfo->ntWaveIndex + 1].dataLocation - (associatedWaveInfo->dataLocation + associatedWaveInfo->getLengthInBytes());
+								unsigned long nextEntryDataLocation = waveSection.entries[associatedDataInfo->ntWaveIndex + 1].dataLocation;
+								unsigned long currentEntryWaveInfoEnd = associatedWaveInfo->dataLocation + associatedWaveInfo->getLengthInBytes();
+								associatedWaveInfo->packetContents.paddingLength = nextEntryDataLocation - currentEntryWaveInfoEnd;
 							}
 							else
 							{
-								associatedWaveInfo->packetContents.paddingLength = 0x10 + (0x10 - (associatedWaveInfo->packetContents.length % 0x10));
+								associatedWaveInfo->packetContents.paddingLength = (0x10 - (associatedWaveInfo->packetContents.length % 0x10));
 							}
 						}
 					}
@@ -1159,9 +1132,9 @@ namespace lava
 				return result;
 			}
 
-			signed long rwsd::overwriteSound(unsigned long dataSectionIndex, const dataInfo& dataInfoIn, const waveInfo& waveInfoIn)
+			signed long rwsd::overwriteSound(unsigned long dataSectionIndex, const dataInfo& dataInfoIn, const waveInfo& waveInfoIn, bool allowSharedWaveSplit)
 			{
-				long changeInWaveDataSize = LONG_MAX;
+				signed long changeInWaveDataSize = LONG_MAX;
 
 				if (waveInfoIn.packetContents.populated)
 				{
@@ -1173,8 +1146,10 @@ namespace lava
 						waveInfo* associatedWaveInfo = getWaveInfoAssociatedWithDataInfo(dataSectionIndex);
 						if (associatedWaveInfo != nullptr && associatedWaveInfo->packetContents.populated)
 						{
-							changeInWaveDataSize = ((signed long)waveInfoIn.getLengthInBytes() - (signed long)associatedWaveInfo->getLengthInBytes())
-								+ ((signed long)waveInfoIn.packetContents.paddingLength - (signed long)associatedWaveInfo->packetContents.paddingLength);
+							signed long differenceInWaveLength = signed long(waveInfoIn.getLengthInBytes()) - signed long(associatedWaveInfo->getLengthInBytes());
+							signed long differenceInPaddingLength = signed long(waveInfoIn.packetContents.paddingLength) - signed long(associatedWaveInfo->packetContents.paddingLength);
+
+							changeInWaveDataSize = differenceInWaveLength + differenceInPaddingLength;
 							associatedWaveInfo->copyOverWaveInfoProperties(waveInfoIn);
 							associatedWaveInfo->packetContents = waveInfoIn.packetContents;
 							associatedWaveInfo->packetContents.address = _NOT_IN_FILE_ADDRESS;
@@ -1188,11 +1163,20 @@ namespace lava
 					}
 					else
 					{
-						waveSection.pushEntry(waveInfoIn);
-						dataEntryPtr->ntWaveIndex = waveSection.entries.size() - 1;
-						header.waveLength += 0x04 + 0x1C + waveInfoIn.channelInfoTableLength;
-						changeInWaveDataSize = (signed long)waveSection.entries.back().getLengthInBytes();
-						changeInWaveDataSize += (signed long)waveSection.entries.back().packetContents.paddingLength;
+						if (allowSharedWaveSplit)
+						{
+							std::cout << "Inserting new Wave!\n";
+							waveSection.pushEntry(waveInfoIn);
+							dataEntryPtr->ntWaveIndex = waveSection.entries.size() - 1;
+							header.waveLength += 0x04 + 0x1C + waveInfoIn.channelInfoTableLength;
+							header.headerLength += 0x04 + 0x1C + waveInfoIn.channelInfoTableLength;
+							changeInWaveDataSize = (signed long)waveSection.entries.back().getLengthInBytes();
+							changeInWaveDataSize += (signed long)waveSection.entries.back().packetContents.paddingLength;
+						}
+						else
+						{
+							changeInWaveDataSize = _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE;
+						}
 					}
 				}
 				return changeInWaveDataSize;
@@ -1217,7 +1201,6 @@ namespace lava
 				}
 
 				return result;
-
 			}
 			bool rwsd::exportContents(std::ostream& destinationStream)
 			{
@@ -1229,19 +1212,6 @@ namespace lava
 					result &= header.exportContents(destinationStream);
 					result &= dataSection.exportContents(destinationStream);
 					result &= waveSection.exportContents(destinationStream);
-				}
-
-				return result;
-			}
-			bool rwsd::exportContents(std::string destinationFile)
-			{
-				bool result = 0;
-
-				std::ofstream output;
-				output.open(destinationFile, std::ios_base::out | std::ios_base::binary);
-				if (output.is_open())
-				{
-					result = rwsd::exportContents(output);
 				}
 
 				return result;
@@ -1303,9 +1273,7 @@ namespace lava
 						rwsdIndex++;
 
 					}
-
 				}
-
 				return result;
 			}
 			bool brsarFileSection::catalogueRWSDCheat(lava::byteArray& bodyIn, std::size_t addressIn)
@@ -1343,8 +1311,7 @@ namespace lava
 
 					length = bodyIn.getLong(address + 0x04);
 
-					//catalogueRWSDCheat(bodyIn, address + 0x20);
-					//int test = 1;
+					result = 1;
 				}
 
 				return result;
@@ -1356,7 +1323,7 @@ namespace lava
 
 			/* BRSAR */
 
-			bool groupPortBundle::populateWavePacket(lava::byteArray& bodyIn, unsigned long collectionIndex, unsigned long dataEntryIndex)
+			/*bool groupPortBundle::populateWavePacket(lava::byteArray& bodyIn, unsigned long collectionIndex, unsigned long dataEntryIndex)
 			{
 				bool result = 0;
 
@@ -1398,7 +1365,7 @@ namespace lava
 				lava::writeRawDataToStream(outputStream, char(0x02));
 				lava::writeRawDataToStream(outputStream, groupHeader.stringID);
 				lava::writeRawDataToStream(outputStream, groupHeader.waveDataLength);
-
+				
 				for (unsigned long i = 0; i < collections.size(); i++)
 				{
 					brsarInfoGroupEntry* currEntry = &collections[i];
@@ -1409,11 +1376,6 @@ namespace lava
 				for (unsigned long i = 0; i < collectionRWSDs.size(); i++)
 				{
 					collectionRWSDs[i].exportContents(outputStream);
-					unsigned long currentOutputPosition = outputStream.tellp();
-					unsigned long paddingLength = (0x10 - (currentOutputPosition % 0x10)) + 0x01;
-					std::vector<char> padding{};
-					padding.resize(paddingLength, 0x00);
-					outputStream.write(padding.data(), padding.size());
 				}
 				for (unsigned long i = 0; i < collectionRWSDs.size(); i++)
 				{
@@ -1423,11 +1385,11 @@ namespace lava
 						waveInfo* currEntry = &currRWSD->waveSection.entries[u];
 						if (currEntry->packetContents.populated)
 						{
-							//std::cout << "Collection " << i << ", Wave 0x" << lava::numToHexStringWithPadding(u, 0x04) << "\n";
-							//std::cout << "\tOutput Stream Pos: 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
+							std::cout << "Collection " << i << ", Wave 0x" << lava::numToHexStringWithPadding(u, 0x04) << "\n";
+							std::cout << "\tOutput Stream Pos: 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
 							std::vector<char>* currEntryPacketBodyPtr = (std::vector<char>*) & currEntry->packetContents.body;
 							outputStream.write(currEntryPacketBodyPtr->data(), currEntryPacketBodyPtr->size());
-							//std::cout << "\tOutput Stream Pos (Post Data-Write): 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
+							std::cout << "\tOutput Stream Pos (Post Data-Write): 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
 							std::vector<char> padding{};
 							if (currEntry->packetContents.paddingLength == ULONG_MAX)
 							{
@@ -1435,7 +1397,7 @@ namespace lava
 							}
 							padding.resize(currEntry->packetContents.paddingLength, 0x00);
 							outputStream.write(padding.data(), padding.size());
-							//std::cout << "\tOutput Stream Pos (Post Pad-Write): 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
+							std::cout << "\tOutput Stream Pos (Post Pad-Write): 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
 						}
 						else
 						{
@@ -1444,6 +1406,9 @@ namespace lava
 						}
 					}
 				}
+				std::vector<char> finalPadding{};
+				finalPadding.resize(0x10, 0x00);
+				outputStream.write(finalPadding.data(), finalPadding.size());
 
 				result = outputStream.good();
 				return result;
@@ -1467,10 +1432,76 @@ namespace lava
 					{
 						output << "0x" << lava::numToHexStringWithPadding(i.first, 0x04) << " 0x" << lava::numToHexStringWithPadding(i.second, 0x04) << "\n";
 					}
+
+					for (auto i : failedMatches)
+					{
+						output << "\n";
+						std::vector<groupPortEntryErrorBundle>* indexPairVec = &i.second;
+						for (unsigned long u = 0; u < indexPairVec->size(); u++)
+						{
+							output << "0x" << lava::numToHexStringWithPadding((*indexPairVec)[u].sourceGroupInfoIndex, 0x04) << " 0x" << lava::numToHexStringWithPadding(sortedIndeces.begin()->second, 0x04) << "\n";
+						}
+					}
+					result = output.good();
 				}
 
 				return result;
 			}
+			bool groupPortSoundCorrespondence::summarizeResults(std::ostream& output)
+			{
+				bool result = 0;
+
+				if (output.good())
+				{
+					output << "Successfully found destinations for " << successfulMatches << " sound(s):\n";
+
+					for (auto i : failedMatches)
+					{
+						std::vector<groupPortEntryErrorBundle>* indexPairVecPtr = &i.second;
+						unsigned long soundEffectNameIndex = ULONG_MAX;
+						if (i.first == groupPortSoundCorrErrorCode::sCEC_NO_MATCH || !indexPairVecPtr->empty())
+						{
+							switch (i.first)
+							{
+								case groupPortSoundCorrErrorCode::sCEC_NO_MATCH:
+								{
+									output << "Couldn't find destinations for " << indexPairVecPtr->size() << " sound(s):\n";
+									break;
+								}
+								case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OTHER:
+								{
+									output << "Non-overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
+									break;
+								}
+								case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE:
+								{
+									output << "Overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
+									break;
+								}
+								case groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE:
+								{
+									output << indexPairVecPtr->size() << " sound(s) were omitted because their destination used a shared wave index:\n";
+									break;
+								}
+								default:
+								{
+									output << indexPairVecPtr->size() << " sound(s) experienced unforeseen errors:\n";
+									break;
+								}
+							}
+							for (std::size_t i = 0; i < indexPairVecPtr->size(); i++)
+							{
+								std::pair<unsigned long, unsigned long>* curr = &(*indexPairVecPtr)[i].sourceGroupDataIndex;
+								output << "\tCollection #" << curr->first << ", Sound #" << curr->second << " (Info Index: 0x" << lava::numToHexStringWithPadding((*indexPairVecPtr)[i].sourceGroupInfoIndex, 0x04) << ")\n";
+							}
+						}
+					}
+					
+					result = output.good();
+				}
+
+				return result;
+			}*/
 
 			bool brsarFile::init(std::string filePathIn)
 			{
@@ -1480,14 +1511,14 @@ namespace lava
 				if (fileIn.is_open())
 				{
 					result = 1;
+					std::cout << "Parsing \"" << filePathIn << "\"...\n";
 					contents.populate(fileIn);
 					std::size_t tempNumber = 0;
 
-					symbSection.populate(contents, contents.getLong(0x10));
-					infoSection.populate(contents, contents.getLong(0x18));
-					fileSection.populate(contents, contents.getLong(0x20));
 
-					//listSoundsInGroup(0x08);
+					result &= symbSection.populate(contents, contents.getLong(0x10));
+					result &= infoSection.populate(contents, contents.getLong(0x18));
+					result &= fileSection.populate(contents, contents.getLong(0x20));
 				}
 				return result;
 			}
@@ -1645,7 +1676,7 @@ namespace lava
 				}
 				return result;
 			}
-
+			/*
 			groupPortBundle brsarFile::getGroupPortBundle(groupFileInfo groupInfoIn)
 			{
 				groupPortBundle result;
@@ -1700,7 +1731,7 @@ namespace lava
 
 				return result;
 			}
-			groupPortSoundCorrespondence brsarFile::getGroupPortStringCorr(const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle)
+			groupPortSoundCorrespondence brsarFile::getGroupPortSoundCorr(const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle)
 			{
 				groupPortSoundCorrespondence result;
 
@@ -1753,7 +1784,11 @@ namespace lava
 								auto findResult = result.matches.find(shuckedName);
 								if (findResult == result.matches.end())
 								{
-									result.sourceEntriesWithNoMatch.push_back(std::make_pair(i, u));
+									groupPortEntryErrorBundle newErrorEntry;
+									newErrorEntry.sourceGroupDataIndex = std::make_pair(i, u);
+									newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
+
+									result.failedMatches[groupPortSoundCorrErrorCode::sCEC_NO_MATCH].push_back(newErrorEntry);
 								}
 								else
 								{
@@ -1764,20 +1799,31 @@ namespace lava
 										{
 											if (overrideUsedReceiver != soundEffectNameOverrides.end())
 											{
-												result.sourceEntriesPushedOutByOverrides.push_back(findResult->second.sourceGroupDataIndex);
+												groupPortEntryErrorBundle newErrorEntry;
+												newErrorEntry.sourceGroupDataIndex = findResult->second.sourceGroupDataIndex;
+												newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
+
+												result.failedMatches[groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE].push_back(newErrorEntry);
 												findResult->second.sourceGroupDataIndexLocked = 1;
 											}
 											else
 											{
-												result.sourceEntriesPushedOutByOtherSounds.push_back(findResult->second.sourceGroupDataIndex);
+												groupPortEntryErrorBundle newErrorEntry;
+												newErrorEntry.sourceGroupDataIndex = findResult->second.sourceGroupDataIndex;
+												newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
+
+												result.failedMatches[groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OTHER].push_back(newErrorEntry);
 											}
 											findResult->second.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
 											findResult->second.sourceGroupDataIndex = std::make_pair(i, u);
 										}
 										else
 										{
-											//std::cerr << "\tCannot overwrite entry, it's locked.\n";
-											result.sourceEntriesPushedOutByOverrides.push_back(std::make_pair(i, u));
+											groupPortEntryErrorBundle newErrorEntry;
+											newErrorEntry.sourceGroupDataIndex = std::make_pair(i, u);
+											newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
+
+											result.failedMatches[groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE].push_back(newErrorEntry);
 										}
 									}
 									else
@@ -1801,7 +1847,7 @@ namespace lava
 				return result;
 			}
 
-			bool brsarFile::portCorrespondingSounds(const groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds)
+			bool brsarFile::portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds, bool allowSharedDestinationWaveSplit)
 			{
 				bool result = 0;
 
@@ -1813,6 +1859,10 @@ namespace lava
 					unsigned long copyDestDataIndex = ULONG_MAX;
 					const dataInfo* copySourceData = nullptr;
 					const waveInfo* copySourceWave = nullptr;
+
+					std::unordered_map<std::string, groupPortEntryInfoBundle>::iterator;
+					std::unordered_map<waveInfo*, dataInfo*>;
+
 					for (auto i : soundCorr.matches)
 					{
 						copySourceCollIndex = i.second.sourceGroupDataIndex.first;
@@ -1826,12 +1876,30 @@ namespace lava
 
 							if (portEmptySounds || copySourceWave->nibbles >= 3)
 							{
-								unsigned long changeInSize = destinationGroupBundle.collectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave);
-								destinationGroupBundle.groupHeader.waveDataLength += changeInSize;
-								destinationGroupBundle.collections[copyDestCollIndex].dataLength += changeInSize;
-								if (copyDestCollIndex < destinationGroupBundle.collections.size() - 1)
+								long changeInSize = destinationGroupBundle.collectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave, allowSharedDestinationWaveSplit);
+								if (changeInSize != ULONG_MAX)
 								{
-									destinationGroupBundle.collections[copyDestCollIndex + 1].dataOffset += changeInSize;
+									if (changeInSize != _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE)
+									{
+										destinationGroupBundle.groupHeader.waveDataLength += changeInSize;
+										destinationGroupBundle.collections[copyDestCollIndex].dataLength += changeInSize;
+										if (copyDestCollIndex < destinationGroupBundle.collections.size() - 1)
+										{
+											destinationGroupBundle.collections[copyDestCollIndex + 1].dataOffset += changeInSize;
+										}
+									}
+									else
+									{
+										groupPortEntryErrorBundle newErrorEntry;
+										newErrorEntry.sourceGroupDataIndex = i.second.sourceGroupDataIndex;
+										newErrorEntry.sourceGroupInfoIndex = i.second.sourceGroupInfoIndex;
+
+										i.second.sourceGroupDataIndex = { ULONG_MAX, ULONG_MAX };
+										i.second.sourceGroupInfoIndex = ULONG_MAX;
+										i.second.sourceGroupDataIndexLocked = 0;
+										soundCorr.failedMatches[groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE].push_back(newErrorEntry);
+										soundCorr.successfulMatches--;
+									}
 								}
 							}
 							else
@@ -1860,47 +1928,16 @@ namespace lava
 						{
 							groupPortBundle sourceGroupBundle = getGroupPortBundle(sourceGroupFileInfo->second);
 							groupPortBundle destinationGroupBundle = getGroupPortBundle(destinationGroupFileInfo->second);
-
-							logOutput << "Porting Group #" << sourceGroupFileInfo->second.groupID << " to Group #" << destinationGroupFileInfo->second.groupID << "...\n";
+							logOutput << "Copying Sounds from Group 0x" << lava::numToHexStringWithPadding(sourceGroupFileInfo->second.groupID, 0x03) << " to Group 0x" << lava::numToHexStringWithPadding(destinationGroupFileInfo->second.groupID, 0x03) << "...\n";
 
 							if (sourceGroupBundle.populatedSuccessfully)
 							{
 								if (destinationGroupBundle.populatedSuccessfully)
 								{
-									groupPortSoundCorrespondence soundCorr = getGroupPortStringCorr(sourceGroupBundle, destinationGroupBundle);
+									groupPortSoundCorrespondence soundCorr = getGroupPortSoundCorr(sourceGroupBundle, destinationGroupBundle);
 
 									if (soundCorr.successfulMatches != ULONG_MAX)
 									{
-										logOutput << "Successfully found destinations for " << soundCorr.successfulMatches << " sound(s).\n";
-										logOutput << "Couldn't find destinations for " << soundCorr.sourceEntriesWithNoMatch.size() << " sound(s):\n";
-										unsigned long soundEffectNameIndex = ULONG_MAX;
-										for (std::size_t i = 0; i < soundCorr.sourceEntriesWithNoMatch.size(); i++)
-										{
-											std::pair<unsigned long, unsigned long>* curr = &soundCorr.sourceEntriesWithNoMatch[i];
-											soundEffectNameIndex = 0x194 + sourceGroupBundle.groupEntriesFirstSoundIndex[curr->first] + curr->second;
-											logOutput << "\tCollection #" << curr->first << ", Sound #" << curr->second << ": " << getSymbString(soundEffectNameIndex) << "\n";
-										}
-										if (!soundCorr.sourceEntriesPushedOutByOverrides.empty())
-										{
-											logOutput << "Overrides caused " << soundCorr.sourceEntriesPushedOutByOverrides.size() << " sound(s) to be omitted:\n";
-											for (std::size_t i = 0; i < soundCorr.sourceEntriesPushedOutByOverrides.size(); i++)
-											{
-												std::pair<unsigned long, unsigned long>* curr = &soundCorr.sourceEntriesPushedOutByOverrides[i];
-												soundEffectNameIndex = 0x194 + sourceGroupBundle.groupEntriesFirstSoundIndex[curr->first] + curr->second;
-												logOutput << "\tCollection #" << curr->first << ", Sound #" << curr->second << ": " << getSymbString(soundEffectNameIndex) << "\n";
-											}
-										}
-										if (!soundCorr.sourceEntriesPushedOutByOtherSounds.empty())
-										{
-											logOutput << "Non-overrides caused " << soundCorr.sourceEntriesPushedOutByOtherSounds.size() << " sound(s) to be omitted:\n";
-											for (std::size_t i = 0; i < soundCorr.sourceEntriesPushedOutByOtherSounds.size(); i++)
-											{
-												std::pair<unsigned long, unsigned long>* curr = &soundCorr.sourceEntriesPushedOutByOtherSounds[i];
-												soundEffectNameIndex = 0x194 + sourceGroupBundle.groupEntriesFirstSoundIndex[curr->first] + curr->second;
-												logOutput << "\tCollection #" << curr->first << ", Sound #" << curr->second << ": " << getSymbString(soundEffectNameIndex) << "\n";
-											}
-										}
-
 										sourceGroupBundle.populateAllWavePackets(contents);
 										destinationGroupBundle.populateAllWavePackets(contents);
 
@@ -1911,13 +1948,57 @@ namespace lava
 											{
 												*soundMappingOut = soundCorr;
 											}
-											//buildBundleFromSawnd(lava::numToHexStringWithPadding(destinationGroupBundle.groupID, 0x3) + ".sawnd");
 										}
 										else
 										{
 											std::cerr << "Failed to port sounds, skipping export.\n";
 										}
-										int test = 0;
+
+										logOutput << "Successfully found destinations for " << soundCorr.successfulMatches << " sound(s).\n";
+										for (auto i : soundCorr.failedMatches)
+										{
+											std::vector<groupPortEntryErrorBundle>* indexPairVecPtr = &i.second;
+											unsigned long soundEffectNameIndex = ULONG_MAX;
+											if (i.first == groupPortSoundCorrErrorCode::sCEC_NO_MATCH || !indexPairVecPtr->empty())
+											{
+												switch (i.first)
+												{
+													case groupPortSoundCorrErrorCode::sCEC_NO_MATCH:
+													{
+														logOutput << "Couldn't find destinations for " << indexPairVecPtr->size() << " sound(s):\n";
+														break;
+													}
+													case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OTHER:
+													{
+														logOutput << "Non-overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
+														break;
+													}
+													case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE:
+													{
+														logOutput << "Overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
+														break;
+													}
+													case groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE:
+													{
+														logOutput << indexPairVecPtr->size() << " sound(s) omitted because their destination used a shared wave index:\n";
+														break;
+													}
+													default:
+													{
+														logOutput << indexPairVecPtr->size() << " sound(s) experienced unforeseen errors:\n";
+														break;
+													}
+												}
+												for (std::size_t i = 0; i < indexPairVecPtr->size(); i++)
+												{
+													std::pair<unsigned long, unsigned long>* curr = &(*indexPairVecPtr)[i].sourceGroupDataIndex;
+													soundEffectNameIndex = 0x194 + sourceGroupBundle.groupEntriesFirstSoundIndex[curr->first] + curr->second;
+													logOutput << "\tCollection #" << curr->first 
+														<< ", Sound #" << curr->second << ": " << getSymbString(soundEffectNameIndex) << " (InfoIndex: 0x" << 
+														lava::numToHexStringWithPadding((*indexPairVecPtr)[i].sourceGroupInfoIndex, 0x04) << ")\n";
+												}
+											}
+										}
 									}
 								}
 								else
@@ -1934,7 +2015,7 @@ namespace lava
 				}
 				return result;
 			}
-
+			*/
 
 			bool brsarFile::exportSawnd(std::size_t groupID, std::string targetFilePath)
 			{
@@ -1992,53 +2073,200 @@ namespace lava
 						}
 
 						std::cout << "Total Size:" << targetGroup.headerLength + targetGroup.waveDataLength << "\n";
-						rwsd testRWSD;
-						testRWSD.populate(contents, targetGroup.headerOffset);
-						testRWSD.exportContents("rwsdtest.dat");
 						sawndOutput.write(contents.body.data() + targetGroup.headerOffset, targetGroup.headerLength + targetGroup.waveDataLength);
 					}
 					else
 					{
-						std::cerr << "Provided group ID couldn't be located. Aborting export.\n";
+						std::cerr << "[ERROR] Provided group ID couldn't be located. Aborting export.\n";
 						remove(targetFilePath.c_str());
 					}
 				}
 				else
 				{
-					std::cerr << "Error creating .sawnd: ";
-					printError(errno);
-					std::cerr << "\n";
+					std::cerr << "[ERROR] Couldn't write to target file location (\"" << targetFilePath << "\").\n";
 				}
 				return result;
 			}
 
 			/* BRSAR */
 
-			groupPortBundle buildBundleFromSawnd(std::string filePathIn)
-			{
-				groupPortBundle result;
+			/* SAWND */ 
 
-				std::ifstream fileIn;
-				fileIn.open(filePathIn, std::ios_base::in | std::ios_base::binary);
+			bool sawndHeader::populate(const lava::byteArray& bodyIn, unsigned long addressIn)
+			{
+				bool result = 0;
+
+				if (bodyIn.populated())
+				{
+					address = addressIn;
+
+					sawndVersion = bodyIn.getChar(address);
+					groupID = bodyIn.getLong(address + 0x01);
+					waveDataLength = bodyIn.getLong(address + 0x05);
+
+					bool firstEntryReached = 0;
+					unsigned long cursor = 0x09;
+					std::array<unsigned long, 3> currFileTriple{};
+					unsigned long currFileTripleSlot = 0;
+					while (!firstEntryReached)
+					{
+						char charIn = bodyIn.getChar(cursor);
+						if (charIn != 'R')
+						{
+							currFileTriple[currFileTripleSlot] = bodyIn.getLong(cursor);
+							currFileTripleSlot++;
+							if (currFileTripleSlot >= 3)
+							{
+								fileInfoTriples.push_back(currFileTriple);
+								currFileTripleSlot = 0;
+								currFileTriple.fill(0x00);
+							}
+							cursor += 0x04;
+						}
+						else
+						{
+							firstEntryReached = 1;
+						}
+					}
+
+					result = 1;
+				}
+				return result;
+			}
+
+			bool summarizeSawndMetadata(std::string filePathIn, std::ostream& output)
+			{
+				bool result = 0;
+
+				output << "SAWND Metadata Summary for \"" << filePathIn << "\"...\n\n";
+
+				std::ifstream fileIn(filePathIn, std::ios_base::in | std::ios_base::binary);
 				if (fileIn.is_open())
 				{
 					lava::byteArray sawndFile;
 					sawndFile.populate(fileIn);
-					fileIn.close();
 					if (sawndFile.populated())
 					{
-						result.groupID = sawndFile.getLong(0x01);
-						result.collectionRWSDs.push_back(rwsd());
-						result.collectionRWSDs.back().populate(sawndFile, 0x21);
-						result.collectionRWSDs.push_back(rwsd());
-						unsigned long secondRWSDStart = sawndFile.getLong(0x29) + 0x21;
-						result.collectionRWSDs.back().populate(sawndFile, secondRWSDStart);
+						sawndHeader header;
+						if (header.populate(sawndFile, 0x00))
+						{
+							unsigned long assumedWaveDataAddress = sawndFile.body.size() - header.waveDataLength;
+							output << "Sawnd Version: " << (int)header.sawndVersion << "\n";
+							output << "Group ID: 0x" << lava::numToHexStringWithPadding(header.groupID, 0x04) << " (" << header.groupID << ")\n";
+							output << "Total Wave Data Length: 0x" << lava::numToHexStringWithPadding(header.waveDataLength, 0x08) << " (" << header.waveDataLength << ")\n";
+							output << "Assumed Wave Data Address: 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress, 0x08) << "\n";
+
+							if (!header.fileInfoTriples.empty())
+							{
+								unsigned long cursor = 0x09 + (0x0C * header.fileInfoTriples.size());
+								output << "\nStructure Summaries:\n";
+								for (unsigned long i = 0; i < header.fileInfoTriples.size(); i++)
+								{
+									unsigned long fileLength = sawndFile.getLong(cursor + 0x08);
+									unsigned long fileTag = sawndFile.getLong(cursor);
+									std::stringstream fileTypeStringStream{};
+									lava::writeRawDataToStream(fileTypeStringStream, fileTag);
+									output << "Collection #" << i + 1 << ", ID: 0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][0], 0x04) << " (" << fileTypeStringStream.str() << ") Structure Information\n";
+									switch (fileTag)
+									{
+										case lava::brawl::sawndz::_HEX_TAG_RWSD:
+										{
+											rwsd tempRWSD;
+											if (tempRWSD.populate(sawndFile, cursor))
+											{
+												output << "\tAddress:\t0x" << lava::numToHexStringWithPadding(tempRWSD.header.address, 0x08) << "\n";
+												output << "\tTotal Length/End:\t0x" << lava::numToHexStringWithPadding(tempRWSD.header.headerLength, 0x08) << " / 0x" << lava::numToHexStringWithPadding(tempRWSD.header.headerLength + tempRWSD.header.address, 0x08)<< "\n";
+												output << "\tData Section Offset/Address:\t0x" << lava::numToHexStringWithPadding(tempRWSD.header.dataOffset, 0x08) << " / 0x" << lava::numToHexStringWithPadding(tempRWSD.dataSection.address, 0x08) << "\n";
+												output << "\tData Section Length/End:\t0x" << lava::numToHexStringWithPadding(tempRWSD.header.dataLength, 0x08) << " / 0x" << lava::numToHexStringWithPadding(tempRWSD.dataSection.address + tempRWSD.header.dataLength, 0x08) << "\n";
+												output << "\tData Entry Count:\t\t0x" << lava::numToHexStringWithPadding(tempRWSD.dataSection.entries.size(), 0x04) << "\n";
+												output << "\tWave Section Offset/Address:\t0x" << lava::numToHexStringWithPadding(tempRWSD.header.waveOffset, 0x08) << " / 0x" << lava::numToHexStringWithPadding(tempRWSD.waveSection.address, 0x08) << "\n";
+												output << "\tWave Section Length/End:\t0x" << lava::numToHexStringWithPadding(tempRWSD.header.waveLength, 0x08) << " / 0x" << lava::numToHexStringWithPadding(tempRWSD.waveSection.address + tempRWSD.header.waveLength, 0x08) << "\n";
+												output << "\tWave Entry Count:\t\t0x" << lava::numToHexStringWithPadding(tempRWSD.waveSection.entries.size(), 0x04) << "\n";
+												output << "\tRaw Wave Data Offset/Address:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][1], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1], 0x08) << "\n";
+												output << "\tRaw Wave Data Length/End:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][2], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1] + header.fileInfoTriples[i][2], 0x08) << "\n";
+											}
+											break;
+										}
+										default:
+										{
+											output << "\tAddress:\t0x" << lava::numToHexStringWithPadding(cursor, 0x08) << "\n";
+											output << "\tTotal Length/End:\t0x" << lava::numToHexStringWithPadding(fileLength, 0x08) << " / 0x" << lava::numToHexStringWithPadding(cursor + fileLength, 0x08) << "\n";
+											output << "\tRaw Wave Data Offset/Address:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][1], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1], 0x08) << "\n";
+											output << "\tRaw Wave Data Length/End:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][2], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1] + header.fileInfoTriples[i][2], 0x08) << "\n";
+											break;
+										}
+									}
+									cursor += sawndFile.getLong(cursor + 0x08);
+								}
+								cursor = 0x09 + (0x0C * header.fileInfoTriples.size());
+								output << "\nEntry Summaries:\n";
+								for (unsigned long i = 0; i < header.fileInfoTriples.size(); i++)
+								{
+									unsigned long fileTag = sawndFile.getLong(cursor);
+									std::stringstream fileTypeStringStream{};
+									lava::writeRawDataToStream(fileTypeStringStream, fileTag);
+									output << "Collection #" << i + 1 << ", ID: 0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][0], 0x04) << " (" << fileTypeStringStream.str() << ") Entry Information\n";
+									output << "\tFile ID:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][0], 0x04) << "\n";
+									switch (fileTag)
+									{
+										case lava::brawl::sawndz::_HEX_TAG_RWSD:
+										{
+											rwsd tempRWSD;
+											if (tempRWSD.populate(sawndFile, cursor))
+											{
+												std::unordered_map<unsigned long, std::vector<unsigned long>> waveIndecesToReferrerDataIndeces{};
+
+												std::vector<dataInfo>* dataVecPtr = &tempRWSD.dataSection.entries;
+												std::vector<waveInfo>* waveVecPtr = &tempRWSD.waveSection.entries;
+												brawlReferenceVector* dataRefVecPtr = &tempRWSD.dataSection.entryReferences;
+												std::vector<unsigned long>* waveOffVecPtr = &tempRWSD.waveSection.entryOffsets;
+
+												unsigned long waveDataBaseAddress = assumedWaveDataAddress;
+												waveDataBaseAddress += header.fileInfoTriples[i][1];
+
+												for (unsigned long u = 0; u < dataVecPtr->size(); u++)
+												{
+													dataInfo* currDataEntry = &(*dataVecPtr)[u];
+													output << "\tData Entry 0x" << lava::numToHexStringWithPadding(u, 0x04) << " (Collection #" << i << ")\n";
+													output << "\t\tOffset / Address:\t0x" << lava::numToHexStringWithPadding(dataRefVecPtr->refs[u].address, 0x08) << " / 0x" << lava::numToHexStringWithPadding(currDataEntry->address, 0x08) << "\n";
+													output << "\t\tAssociated Wave ID:\t0x" << lava::numToHexStringWithPadding(currDataEntry->ntWaveIndex, 0x04) << "\n";
+													if (currDataEntry->ntWaveIndex != ULONG_MAX)
+													{
+														auto emplaceResult = waveIndecesToReferrerDataIndeces.emplace(std::make_pair(currDataEntry->ntWaveIndex, std::vector<unsigned long>()));
+														if (emplaceResult.second)
+														{
+															waveInfo* currWaveEntry = &(*waveVecPtr)[currDataEntry->ntWaveIndex];
+															output << "\t\tWave Entry Offset / Address:\t0x" << lava::numToHexStringWithPadding((*waveOffVecPtr)[currDataEntry->ntWaveIndex], 0x08) << " / 0x" << lava::numToHexStringWithPadding(currWaveEntry->address, 0x08) << "\n";
+															output << "\t\tWave Contents Offset / Address:\t0x" << lava::numToHexStringWithPadding(currWaveEntry->dataLocation, 0x08) << " / 0x" << lava::numToHexStringWithPadding(waveDataBaseAddress + currWaveEntry->dataLocation, 0x08) << "\n";
+															output << "\t\tWave Contents Length / End:\t0x" << lava::numToHexStringWithPadding(currWaveEntry->getLengthInBytes(), 0x04) << " / 0x" << lava::numToHexStringWithPadding(waveDataBaseAddress + currWaveEntry->dataLocation + currWaveEntry->getLengthInBytes(), 0x08) << "\n";
+															emplaceResult.first->second.push_back(u);
+														}
+														else
+														{
+															output << "\t\tSkipping Wave Summary, see Data Entry 0x" << lava::numToHexStringWithPadding(emplaceResult.first->second.front(), 0x04) << "\n";
+															emplaceResult.first->second.push_back(u);
+														}
+													}
+												}
+											}
+											break;
+										}
+										default:
+										{
+											output << "No entry summary available for this file type!\n";
+											break;
+										}
+									}
+									cursor += sawndFile.getLong(cursor + 0x08);
+								}
+							}
+						}
 					}
 				}
-
 				return result;
 			}
 
+			/* SAWND */
 		}
 	}
 	
