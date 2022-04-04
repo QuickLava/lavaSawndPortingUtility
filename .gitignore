@@ -11,3 +11,6 @@ sawndz_lavaTouchUp/Junk/**
 sawndz_lavaTouchUp/EX Soundbanks/**
 sawndz_lavaTouchUp/Ported Soundbanks/**
 sawndz_lavaTouchUp/*.txt
+!sawndz_lavaTouchUp/soundbanksToPort.txt
+!sawndz_lavaTouchUp/soundNameOverrides.txt
+!**/.gitkeep

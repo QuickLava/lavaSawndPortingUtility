@@ -1,0 +1,9 @@
+# Add new entries to this file in the following format:
+# {Source Character Fighter ID}, {Target Character Fighter ID}
+# For instance, the following line...
+# 	0x00, 0x2E
+# ... would generate a Snake .sawnd with Mario's sounds and properties ported over.
+# Importantly, a "smashbros_sound.brsar" file must be provided for this program to work,
+# as all sound and sound property data is pulled directly from the contents of that file.
+# Note: Any Fighter IDs not prefixed with "0x" will be read as decimal numbers.
+# Note: Lines starting with a hashtag ('#') or a forward slash ('/') are ignored.
