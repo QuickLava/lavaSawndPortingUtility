@@ -1132,6 +1132,7 @@ result = 1;
 				return result;
 			}
 
+
 			signed long rwsd::overwriteSound(unsigned long dataSectionIndex, const dataInfo& dataInfoIn, const waveInfo& waveInfoIn, bool allowSharedWaveSplit)
 			{
 				signed long changeInWaveDataSize = LONG_MAX;
@@ -1179,6 +1180,66 @@ result = 1;
 						}
 					}
 				}
+				return changeInWaveDataSize;
+			}
+			signed long rwsd::shareWaveTargetBetweenDataEntries(unsigned long recipientDataSectionIndex, unsigned long donorDataSectionIndex, const dataInfo* dataInfoIn, bool voidOutExistingSound)
+			{
+				signed long changeInWaveDataSize = LONG_MAX;
+
+				if (recipientDataSectionIndex < dataSection.entries.size())
+				{
+					if (donorDataSectionIndex < dataSection.entries.size())
+					{
+						dataInfo* dataEntryPtr = &dataSection.entries[recipientDataSectionIndex];
+						if (dataInfoIn != nullptr)
+						{
+							dataEntryPtr->copyOverDataInfoProperties(*dataInfoIn);
+						}
+						if (voidOutExistingSound)
+						{
+							if (isFirstToUseWave(recipientDataSectionIndex))
+							{
+								waveInfo* associatedWaveInfo = getWaveInfoAssociatedWithDataInfo(recipientDataSectionIndex);
+								if (associatedWaveInfo != nullptr && associatedWaveInfo->packetContents.populated)
+								{
+									// Create an empty wavePacket.
+									wavePacket tempEmptyPacket;
+									tempEmptyPacket.body = std::vector<unsigned char>(_EMPTY_SOUND_SOUND_LENGTH, 0x00);
+									tempEmptyPacket.length = _EMPTY_SOUND_SOUND_LENGTH;
+									tempEmptyPacket.paddingLength = _EMPTY_SOUND_TOTAL_LENGTH - _EMPTY_SOUND_SOUND_LENGTH;
+									tempEmptyPacket.populated = 1;
+									tempEmptyPacket.address = _NOT_IN_FILE_ADDRESS;
+
+									// Record the difference in size between the new empty packet and the old one.
+									signed long differenceInWaveLength = signed long(tempEmptyPacket.length) - signed long(associatedWaveInfo->getLengthInBytes());
+									signed long differenceInPaddingLength = signed long(tempEmptyPacket.paddingLength) - signed long(associatedWaveInfo->packetContents.paddingLength);
+									changeInWaveDataSize = differenceInWaveLength + differenceInPaddingLength;
+
+									// Overwrite old wavePacket with new one.
+									associatedWaveInfo->packetContents = tempEmptyPacket;
+
+									// Propogate change in size through all other waves.
+									for (std::size_t i = dataEntryPtr->ntWaveIndex + 1; i < waveSection.entries.size(); i++)
+									{
+										waveSection.entries[i].address = _NOT_IN_FILE_ADDRESS;
+										waveSection.entries[i].dataLocation += changeInWaveDataSize;
+									}
+								}
+							}
+							else
+							{
+								changeInWaveDataSize = _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE;
+							}
+						}
+						else
+						{
+							changeInWaveDataSize = 0;
+						}
+						dataInfo* donorDataEntryPtr = &dataSection.entries[donorDataSectionIndex];
+						dataEntryPtr->ntWaveIndex = donorDataEntryPtr->ntWaveIndex;
+					}
+				}
+				
 				return changeInWaveDataSize;
 			}
 
@@ -2187,12 +2248,25 @@ result = 1;
 											}
 											break;
 										}
-										default:
+										case lava::brawl::sawndz::_HEX_TAG_RBNK:
 										{
 											output << "\tAddress:\t0x" << lava::numToHexStringWithPadding(cursor, 0x08) << "\n";
 											output << "\tTotal Length/End:\t0x" << lava::numToHexStringWithPadding(fileLength, 0x08) << " / 0x" << lava::numToHexStringWithPadding(cursor + fileLength, 0x08) << "\n";
 											output << "\tRaw Wave Data Offset/Address:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][1], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1], 0x08) << "\n";
 											output << "\tRaw Wave Data Length/End:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][2], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1] + header.fileInfoTriples[i][2], 0x08) << "\n";
+											break;
+										}
+										case lava::brawl::sawndz::_HEX_TAG_RSEQ:
+										{
+											output << "\tAddress:\t0x" << lava::numToHexStringWithPadding(cursor, 0x08) << "\n";
+											output << "\tTotal Length/End:\t0x" << lava::numToHexStringWithPadding(fileLength, 0x08) << " / 0x" << lava::numToHexStringWithPadding(cursor + fileLength, 0x08) << "\n";
+											output << "\tRaw Wave Data Offset/Address:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][1], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1], 0x08) << "\n";
+											output << "\tRaw Wave Data Length/End:\t0x" << lava::numToHexStringWithPadding(header.fileInfoTriples[i][2], 0x08) << " / 0x" << lava::numToHexStringWithPadding(assumedWaveDataAddress + header.fileInfoTriples[i][1] + header.fileInfoTriples[i][2], 0x08) << "\n";
+											break;
+										}
+										default:
+										{
+											output << "\tCollection type (" << fileTypeStringStream.str() << ")invalid! SAWND is likely poorly formed!";
 											break;
 										}
 									}

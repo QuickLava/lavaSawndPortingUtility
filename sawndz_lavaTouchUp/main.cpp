@@ -214,7 +214,7 @@ int portAllBanksMain(int argc, char* argv[])
 	{
 		std::cout << "\n";
 		lava::brawl::sawndz::populateSoundEffectNameOverrides(overrideFileName);
-		portAllFighterBanksToFighter(brsarIn, lava::brawl::LCFI_LUIGI);
+		portAllFighterBanksToFighter(brsarIn, lava::brawl::LCFI_SNAKE);
 	}
 	else
 	{

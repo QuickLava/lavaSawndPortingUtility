@@ -28,7 +28,11 @@ namespace lava
 		{
 			const std::string version = "v0.85";
 			const unsigned long _HEX_TAG_RWSD = 0x52575344;
+			const unsigned long _HEX_TAG_RBNK = 0x52424E4B;
+			const unsigned long _HEX_TAG_RSEQ = 0x52534551;
 			const unsigned long _NOT_IN_FILE_ADDRESS = 0xDEADBEEF;
+			const unsigned long _EMPTY_SOUND_SOUND_LENGTH = 0x02;
+			const unsigned long _EMPTY_SOUND_TOTAL_LENGTH = 0x20;
 			const unsigned long _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE = 0xDEADDEED;
 
 			enum class rsarFileSectionType
@@ -397,7 +401,9 @@ namespace lava
 				bool isFirstToUseWave(unsigned long dataSectionIndex);
 				waveInfo* getWaveInfoAssociatedWithDataInfo(unsigned long dataSectionIndex);
 				bool populateWavePacket(lava::byteArray& bodyIn, unsigned long parentGroupWaveDataAddress, unsigned long collectionDataOffset, unsigned long dataSectionIndex);
+
 				signed long overwriteSound(unsigned long dataSectionIndex, const dataInfo& dataInfoIn, const waveInfo& waveInfoIn, bool allowSharedWaveSplit = 0);
+				signed long shareWaveTargetBetweenDataEntries(unsigned long recipientDataSectionIndex, unsigned long donorDataSectionIndex,const dataInfo* dataInfoIn = nullptr, bool voidOutExistingSound = 0);
 
 				bool populate(lava::byteArray& bodyIn, std::size_t addressIn);
 				bool exportContents(std::ostream& destinationStream);

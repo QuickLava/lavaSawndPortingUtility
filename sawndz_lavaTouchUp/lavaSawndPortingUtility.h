@@ -8,6 +8,9 @@ namespace lava
 	{
 		namespace sawndz
 		{
+			constexpr bool _maintainSharedWaves = 1;
+			constexpr bool _clearExistingWaveWhenPortingSharedWave = 1;
+
 			struct groupPortBundle
 			{
 				bool populatedSuccessfully = 0;
@@ -66,7 +69,7 @@ namespace lava
 
 			groupPortBundle getGroupPortBundle(brsarFile& sourceBrsar, groupFileInfo groupInfoIn);
 			groupPortSoundCorrespondence getGroupPortSoundCorr(brsarFile& sourceBrsar, const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle);
-			bool portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds = 1, bool allowSharedDestinationWaveSplit = 0);
+			bool portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds = 1, bool maintainSharedWaves = 1, bool allowSharedDestinationWaveSplit = 0);
 
 			bool portGroupToGroup(brsarFile& sourceBrsar, unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput = std::cout, groupPortSoundCorrespondence* soundMappingOut = nullptr);
 		}

@@ -250,7 +250,6 @@ namespace lava
 				return result;
 			}
 
-
 			groupPortBundle getGroupPortBundle(brsarFile& sourceBrsar, groupFileInfo groupInfoIn)
 			{
 				groupPortBundle result;
@@ -286,7 +285,7 @@ namespace lava
 								result.collectionsOrder.push_back(std::make_pair(1, result.inactiveCollections.size()));
 								result.inactiveCollections.push_back(tempEntry);
 								result.populatedSuccessfully &= populatedSuccessfully;
-								std::cerr << "\tDisallowed Collection (File ID: " << tempEntry.fileID << ")! This file won't be used for porting, though it will be exported if necessary.\n";
+								std::cerr << "\tCollection (File ID: " << tempEntry.fileID << ") is disabled, and won't be used for porting.\n";
 							}
 						}
 
@@ -442,7 +441,7 @@ namespace lava
 				return result;
 			}
 
-			bool portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds, bool allowSharedDestinationWaveSplit)
+			bool portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds, bool maintainSharedWaves, bool allowSharedDestinationWaveSplit)
 			{
 				bool result = 0;
 
@@ -458,6 +457,8 @@ namespace lava
 					std::unordered_map<std::string, groupPortEntryInfoBundle>::iterator;
 					std::unordered_map<waveInfo*, dataInfo*>;
 
+					// Key is Wave Index, Value is a pair: First Value == Source Data Index, Second Value == Destination Data Index
+					std::unordered_map<const waveInfo*, std::vector<std::pair<unsigned long, unsigned long>>> waveIndecesToReferrerDataIndeces{};
 					for (auto i : soundCorr.matches)
 					{
 						copySourceCollIndex = i.second.sourceGroupDataIndex.first;
@@ -469,9 +470,47 @@ namespace lava
 							copySourceData = &sourceGroupBundle.activeCollectionRWSDs[copySourceCollIndex].dataSection.entries[copySourceDataIndex];
 							copySourceWave = &sourceGroupBundle.activeCollectionRWSDs[copySourceCollIndex].waveSection.entries[copySourceData->ntWaveIndex];
 
-							if (portEmptySounds || copySourceWave->nibbles >= 3)
+							auto findResult = waveIndecesToReferrerDataIndeces.find(copySourceWave);
+							if (!maintainSharedWaves || findResult == waveIndecesToReferrerDataIndeces.end())
 							{
-								long changeInSize = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave, allowSharedDestinationWaveSplit);
+								if (portEmptySounds || copySourceWave->nibbles >= 3)
+								{
+									long changeInSize = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave, allowSharedDestinationWaveSplit);
+									if (changeInSize != ULONG_MAX)
+									{
+										if (changeInSize != _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE)
+										{
+											destinationGroupBundle.groupHeader.waveDataLength += changeInSize;
+											destinationGroupBundle.activeCollections[copyDestCollIndex].dataLength += changeInSize;
+											if (copyDestCollIndex < destinationGroupBundle.activeCollections.size() - 1)
+											{
+												destinationGroupBundle.activeCollections[copyDestCollIndex + 1].dataOffset += changeInSize;
+											}
+										}
+										else
+										{
+											groupPortEntryErrorBundle newErrorEntry;
+											newErrorEntry.sourceGroupDataIndex = i.second.sourceGroupDataIndex;
+											newErrorEntry.sourceGroupInfoIndex = i.second.sourceGroupInfoIndex;
+
+											i.second.sourceGroupDataIndex = { ULONG_MAX, ULONG_MAX };
+											i.second.sourceGroupInfoIndex = ULONG_MAX;
+											i.second.sourceGroupDataIndexLocked = 0;
+											soundCorr.failedMatches[groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE].push_back(newErrorEntry);
+											soundCorr.successfulMatches--;
+										}
+									}
+								}
+								else
+								{
+									std::cerr << "Skipping empty sound!\n";
+								}
+							}
+							else
+							{
+								unsigned long donorDataIndex = findResult->second.begin()->second;
+								std::cout << "Source Data Entry " << lava::numToHexStringWithPadding(copySourceDataIndex, 0x02) << " (Coll: " << lava::numToHexStringWithPadding(copySourceCollIndex, 0x02) << ") uses a shared wave!\n";
+								long changeInSize = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].shareWaveTargetBetweenDataEntries(copyDestDataIndex, donorDataIndex, copySourceData, _clearExistingWaveWhenPortingSharedWave);
 								if (changeInSize != ULONG_MAX)
 								{
 									if (changeInSize != _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE)
@@ -497,10 +536,7 @@ namespace lava
 									}
 								}
 							}
-							else
-							{
-								std::cerr << "Skipping empty sound!\n";
-							}
+							waveIndecesToReferrerDataIndeces[copySourceWave].push_back(std::make_pair(copySourceDataIndex, copyDestDataIndex));
 						}
 					}
 
@@ -536,7 +572,7 @@ namespace lava
 										sourceGroupBundle.populateAllWavePackets(sourceBrsar.contents);
 										destinationGroupBundle.populateAllWavePackets(sourceBrsar.contents);
 
-										if (portCorrespondingSounds(soundCorr, sourceGroupBundle, destinationGroupBundle, 1))
+										if (portCorrespondingSounds(soundCorr, sourceGroupBundle, destinationGroupBundle, 1, _maintainSharedWaves, 0))
 										{
 											result = destinationGroupBundle.exportAsSawnd(contentsOutput);
 											if (soundMappingOut != nullptr)
