@@ -34,18 +34,23 @@ namespace lava
 				bool exportAsSawnd(std::ostream& outputStream);
 			};
 
-			enum class groupPortSoundCorrErrorCode
+			enum class groupPortSoundCorrMessageCode
 			{
-				sCEC_NULL = 0x00,
-				sCEC_NO_MATCH,
-				sCEC_PUSHED_BY_OTHER,
-				sCEC_PUSHED_BY_OVERRIDE,
-				sCEC_SHARED_WAVE,
+				sCMC_NULL = 0x00,
+				sCMC_NO_MATCH,
+				sCMC_PUSHED_BY_OTHER,
+				sCMC_PUSHED_BY_OVERRIDE,
+				sCMC_SHARED_WAVE_ADD_FAIL,
+				sCMC_SHARED_WAVE_CLEAR_FAIL,
+				sCMC_SHARED_WAVE_OPEN_SPACE,
 			};
-			struct groupPortEntryErrorBundle
+			struct groupPortEntryMessageBundle
 			{
 				unsigned long sourceGroupInfoIndex = ULONG_MAX;
 				std::pair<unsigned long, unsigned long> sourceGroupDataIndex = { ULONG_MAX, ULONG_MAX };
+				unsigned long destinationGroupInfoIndex = ULONG_MAX;
+				std::pair<unsigned long, unsigned long> destinationGroupDataIndex = { ULONG_MAX, ULONG_MAX };
+				std::string specialMessageText = "";
 			};
 			struct groupPortEntryInfoBundle
 			{
@@ -59,8 +64,9 @@ namespace lava
 
 			struct groupPortSoundCorrespondence
 			{
-				std::unordered_map<std::string, groupPortEntryInfoBundle> matches{};
-				std::map<groupPortSoundCorrErrorCode, std::vector<groupPortEntryErrorBundle>> failedMatches{};
+				std::map<std::string, groupPortEntryInfoBundle> matches{};
+				std::map<groupPortSoundCorrMessageCode, std::vector<groupPortEntryMessageBundle>> failedMatches{};
+				std::map<groupPortSoundCorrMessageCode, std::vector<groupPortEntryMessageBundle>> otherMessages{};
 				unsigned long successfulMatches = ULONG_MAX;
 
 				bool outputCorrespondenceData(std::ostream& output);

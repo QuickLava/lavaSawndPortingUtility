@@ -183,7 +183,7 @@ namespace lava
 					for (auto i : failedMatches)
 					{
 						output << "\n";
-						std::vector<groupPortEntryErrorBundle>* indexPairVec = &i.second;
+						std::vector<groupPortEntryMessageBundle>* indexPairVec = &i.second;
 						for (unsigned long u = 0; u < indexPairVec->size(); u++)
 						{
 							output << "0x" << lava::numToHexStringWithPadding((*indexPairVec)[u].sourceGroupInfoIndex, 0x04) << " 0x" << lava::numToHexStringWithPadding(sortedIndeces.begin()->second, 0x04) << "\n";
@@ -204,28 +204,28 @@ namespace lava
 
 					for (auto i : failedMatches)
 					{
-						std::vector<groupPortEntryErrorBundle>* indexPairVecPtr = &i.second;
+						std::vector<groupPortEntryMessageBundle>* indexPairVecPtr = &i.second;
 						unsigned long soundEffectNameIndex = ULONG_MAX;
-						if (i.first == groupPortSoundCorrErrorCode::sCEC_NO_MATCH || !indexPairVecPtr->empty())
+						if (i.first == groupPortSoundCorrMessageCode::sCMC_NO_MATCH || !indexPairVecPtr->empty())
 						{
 							switch (i.first)
 							{
-							case groupPortSoundCorrErrorCode::sCEC_NO_MATCH:
+							case groupPortSoundCorrMessageCode::sCMC_NO_MATCH:
 							{
 								output << "Couldn't find destinations for " << indexPairVecPtr->size() << " sound(s):\n";
 								break;
 							}
-							case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OTHER:
+							case groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OTHER:
 							{
 								output << "Non-overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
 								break;
 							}
-							case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE:
+							case groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OVERRIDE:
 							{
 								output << "Overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
 								break;
 							}
-							case groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE:
+							case groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_ADD_FAIL:
 							{
 								output << indexPairVecPtr->size() << " sound(s) were omitted because their destination used a shared wave index:\n";
 								break;
@@ -378,11 +378,10 @@ namespace lava
 								auto findResult = result.matches.find(shuckedName);
 								if (findResult == result.matches.end())
 								{
-									groupPortEntryErrorBundle newErrorEntry;
+									groupPortEntryMessageBundle newErrorEntry;
 									newErrorEntry.sourceGroupDataIndex = std::make_pair(i, u);
 									newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
-
-									result.failedMatches[groupPortSoundCorrErrorCode::sCEC_NO_MATCH].push_back(newErrorEntry);
+									result.failedMatches[groupPortSoundCorrMessageCode::sCMC_NO_MATCH].push_back(newErrorEntry);
 								}
 								else
 								{
@@ -393,31 +392,35 @@ namespace lava
 										{
 											if (overrideUsedReceiver != soundEffectNameOverrides.end())
 											{
-												groupPortEntryErrorBundle newErrorEntry;
+												groupPortEntryMessageBundle newErrorEntry;
 												newErrorEntry.sourceGroupDataIndex = findResult->second.sourceGroupDataIndex;
 												newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
-
-												result.failedMatches[groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE].push_back(newErrorEntry);
+												newErrorEntry.destinationGroupDataIndex = findResult->second.destinationGroupDataIndex;
+												newErrorEntry.destinationGroupInfoIndex = findResult->second.destinationGroupInfoIndex;
+												result.failedMatches[groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OVERRIDE].push_back(newErrorEntry);
 												findResult->second.sourceGroupDataIndexLocked = 1;
 											}
 											else
 											{
-												groupPortEntryErrorBundle newErrorEntry;
+												groupPortEntryMessageBundle newErrorEntry;
 												newErrorEntry.sourceGroupDataIndex = findResult->second.sourceGroupDataIndex;
 												newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
-
-												result.failedMatches[groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OTHER].push_back(newErrorEntry);
+												newErrorEntry.destinationGroupDataIndex = findResult->second.destinationGroupDataIndex;
+												newErrorEntry.destinationGroupInfoIndex = findResult->second.destinationGroupInfoIndex;
+												result.failedMatches[groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OTHER].push_back(newErrorEntry);
 											}
 											findResult->second.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
 											findResult->second.sourceGroupDataIndex = std::make_pair(i, u);
 										}
 										else
 										{
-											groupPortEntryErrorBundle newErrorEntry;
+											groupPortEntryMessageBundle newErrorEntry;
 											newErrorEntry.sourceGroupDataIndex = std::make_pair(i, u);
 											newErrorEntry.sourceGroupInfoIndex = soundEffectNameIndex - 0x194;
+											newErrorEntry.destinationGroupDataIndex = findResult->second.destinationGroupDataIndex;
+											newErrorEntry.destinationGroupInfoIndex = findResult->second.destinationGroupInfoIndex;
 
-											result.failedMatches[groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE].push_back(newErrorEntry);
+											result.failedMatches[groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OVERRIDE].push_back(newErrorEntry);
 										}
 									}
 									else
@@ -489,14 +492,16 @@ namespace lava
 										}
 										else
 										{
-											groupPortEntryErrorBundle newErrorEntry;
+											groupPortEntryMessageBundle newErrorEntry;
 											newErrorEntry.sourceGroupDataIndex = i.second.sourceGroupDataIndex;
 											newErrorEntry.sourceGroupInfoIndex = i.second.sourceGroupInfoIndex;
+											newErrorEntry.destinationGroupDataIndex = i.second.destinationGroupDataIndex;
+											newErrorEntry.destinationGroupInfoIndex = i.second.destinationGroupInfoIndex;
 
 											i.second.sourceGroupDataIndex = { ULONG_MAX, ULONG_MAX };
 											i.second.sourceGroupInfoIndex = ULONG_MAX;
 											i.second.sourceGroupDataIndexLocked = 0;
-											soundCorr.failedMatches[groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE].push_back(newErrorEntry);
+											soundCorr.failedMatches[groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_ADD_FAIL].push_back(newErrorEntry);
 											soundCorr.successfulMatches--;
 										}
 									}
@@ -509,7 +514,8 @@ namespace lava
 							else
 							{
 								unsigned long donorDataIndex = findResult->second.begin()->second;
-								std::cout << "Source Data Entry " << lava::numToHexStringWithPadding(copySourceDataIndex, 0x02) << " (Coll: " << lava::numToHexStringWithPadding(copySourceCollIndex, 0x02) << ") uses a shared wave!\n";
+								unsigned long originalWaveIndex = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].dataSection.entries[copyDestDataIndex].ntWaveIndex;
+								//std::cout << "Source Data Entry " << lava::numToHexStringWithPadding(copySourceDataIndex, 0x02) << " (Coll: " << lava::numToHexStringWithPadding(copySourceCollIndex, 0x02) << ") uses a shared wave!\n";
 								long changeInSize = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].shareWaveTargetBetweenDataEntries(copyDestDataIndex, donorDataIndex, copySourceData, _clearExistingWaveWhenPortingSharedWave);
 								if (changeInSize != ULONG_MAX)
 								{
@@ -521,17 +527,28 @@ namespace lava
 										{
 											destinationGroupBundle.activeCollections[copyDestCollIndex + 1].dataOffset += changeInSize;
 										}
+										unsigned long newWaveIndex = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].dataSection.entries[copyDestDataIndex].ntWaveIndex;
+										groupPortEntryMessageBundle newMessageEntry;
+										newMessageEntry.sourceGroupDataIndex = i.second.sourceGroupDataIndex;
+										newMessageEntry.sourceGroupInfoIndex = i.second.sourceGroupInfoIndex;
+										newMessageEntry.destinationGroupDataIndex = i.second.destinationGroupDataIndex;
+										newMessageEntry.destinationGroupInfoIndex = i.second.destinationGroupInfoIndex;
+										newMessageEntry.specialMessageText = " (Orig. Wave ID: 0x" + lava::numToHexStringWithPadding(originalWaveIndex, 0x02);
+										newMessageEntry.specialMessageText += ", New Wave ID: 0x" + lava::numToHexStringWithPadding(newWaveIndex, 0x02) + ")";
+										soundCorr.otherMessages[groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_OPEN_SPACE].push_back(newMessageEntry);
 									}
 									else
 									{
-										groupPortEntryErrorBundle newErrorEntry;
+										groupPortEntryMessageBundle newErrorEntry;
 										newErrorEntry.sourceGroupDataIndex = i.second.sourceGroupDataIndex;
 										newErrorEntry.sourceGroupInfoIndex = i.second.sourceGroupInfoIndex;
+										newErrorEntry.destinationGroupDataIndex = i.second.destinationGroupDataIndex;
+										newErrorEntry.destinationGroupInfoIndex = i.second.destinationGroupInfoIndex;
 
 										i.second.sourceGroupDataIndex = { ULONG_MAX, ULONG_MAX };
 										i.second.sourceGroupInfoIndex = ULONG_MAX;
 										i.second.sourceGroupDataIndexLocked = 0;
-										soundCorr.failedMatches[groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE].push_back(newErrorEntry);
+										soundCorr.failedMatches[groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_CLEAR_FAIL].push_back(newErrorEntry);
 										soundCorr.successfulMatches--;
 									}
 								}
@@ -588,45 +605,97 @@ namespace lava
 										logOutput << "Successfully found destinations for " << soundCorr.successfulMatches << " sound(s).\n";
 										for (auto i : soundCorr.failedMatches)
 										{
-											std::vector<groupPortEntryErrorBundle>* indexPairVecPtr = &i.second;
+											std::vector<groupPortEntryMessageBundle>* messageVecPtr = &i.second;
 											unsigned long soundEffectNameIndex = ULONG_MAX;
-											if (i.first == groupPortSoundCorrErrorCode::sCEC_NO_MATCH || !indexPairVecPtr->empty())
+											if (i.first == groupPortSoundCorrMessageCode::sCMC_NO_MATCH || !messageVecPtr->empty())
 											{
 												switch (i.first)
 												{
-													case groupPortSoundCorrErrorCode::sCEC_NO_MATCH:
+													case groupPortSoundCorrMessageCode::sCMC_NO_MATCH:
 													{
-														logOutput << "Couldn't find destinations for " << indexPairVecPtr->size() << " sound(s):\n";
+														logOutput << "Couldn't find destinations for " << messageVecPtr->size() << " sound(s):\n";
 														break;
 													}
-													case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OTHER:
+													case groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OTHER:
 													{
-														logOutput << "Non-overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
+														logOutput << "Non-overrides caused " << messageVecPtr->size() << " sound(s) to be omitted:\n";
 														break;
 													}
-													case groupPortSoundCorrErrorCode::sCEC_PUSHED_BY_OVERRIDE:
+													case groupPortSoundCorrMessageCode::sCMC_PUSHED_BY_OVERRIDE:
 													{
-														logOutput << "Overrides caused " << indexPairVecPtr->size() << " sound(s) to be omitted:\n";
+														logOutput << "Overrides caused " << messageVecPtr->size() << " sound(s) to be omitted:\n";
 														break;
 													}
-													case groupPortSoundCorrErrorCode::sCEC_SHARED_WAVE:
+													case groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_ADD_FAIL:
 													{
-														logOutput << indexPairVecPtr->size() << " sound(s) omitted because their destination used a shared wave index:\n";
+														logOutput << messageVecPtr->size() << " sound(s) omitted because their destination used a shared wave index:\n";
+														break;
+													}
+													case groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_CLEAR_FAIL:
+													{
+														logOutput << messageVecPtr->size() << " sound(s) with newly shared wave entries couldn't have their original entries cleared:\n";
 														break;
 													}
 													default:
 													{
-														logOutput << indexPairVecPtr->size() << " sound(s) experienced unforeseen errors:\n";
+														logOutput << messageVecPtr->size() << " sound(s) experienced unforeseen errors:\n";
 														break;
 													}
 												}
-												for (std::size_t i = 0; i < indexPairVecPtr->size(); i++)
+												for (std::size_t u = 0; u < messageVecPtr->size(); u++)
 												{
-													std::pair<unsigned long, unsigned long>* curr = &(*indexPairVecPtr)[i].sourceGroupDataIndex;
-													soundEffectNameIndex = 0x194 + sourceGroupBundle.groupEntriesFirstSoundIndex[curr->first] + curr->second;
-													logOutput << "\tCollection #" << curr->first
-														<< ", Sound #" << curr->second << ": " << sourceBrsar.getSymbString(soundEffectNameIndex) << " (InfoIndex: 0x" <<
-														lava::numToHexStringWithPadding((*indexPairVecPtr)[i].sourceGroupInfoIndex, 0x04) << ")\n";
+													groupPortEntryMessageBundle* currMessage = &(*messageVecPtr)[u];
+
+													std::pair<unsigned long, unsigned long>* sourceGroupDataIndeces = &currMessage->sourceGroupDataIndex;
+													std::pair<unsigned long, unsigned long>* destGroupDataIndeces = &currMessage->destinationGroupDataIndex;
+													soundEffectNameIndex = 0x194 + 
+														sourceGroupBundle.groupEntriesFirstSoundIndex[sourceGroupDataIndeces->first] + sourceGroupDataIndeces->second;
+													logOutput << "\tCollection #" << sourceGroupDataIndeces->first + 1
+														<< ", Sound #" << sourceGroupDataIndeces->second << ": " << sourceBrsar.getSymbString(soundEffectNameIndex) 
+														<< " (InfoIndex: 0x" <<	lava::numToHexStringWithPadding(currMessage->sourceGroupInfoIndex, 0x04) << ")";
+													if (!currMessage->specialMessageText.empty())
+													{
+														logOutput << currMessage->specialMessageText;
+													}
+													logOutput << "\n";
+												}
+											}
+										}
+										for (auto i : soundCorr.otherMessages)
+										{
+											std::vector<groupPortEntryMessageBundle>* messageVecPtr = &i.second;
+											unsigned long soundEffectNameIndex = ULONG_MAX;
+											if (!messageVecPtr->empty())
+											{
+												switch (i.first)
+												{
+													case groupPortSoundCorrMessageCode::sCMC_SHARED_WAVE_OPEN_SPACE:
+													{
+														logOutput << "Because " << messageVecPtr->size() << " sound(s) now use shared wave entries, their original wave IDs are now free to use:\n";
+														break;
+													}
+													default:
+													{
+														logOutput << "Something unexpected happened to " << messageVecPtr->size() << " sound(s):\n";
+														break;
+													}
+												}
+												for (std::size_t u = 0; u < messageVecPtr->size(); u++)
+												{
+													groupPortEntryMessageBundle* currMessage = &(*messageVecPtr)[u];
+
+													std::pair<unsigned long, unsigned long>* sourceGroupDataIndeces = &currMessage->sourceGroupDataIndex;
+													std::pair<unsigned long, unsigned long>* destGroupDataIndeces = &currMessage->destinationGroupDataIndex;
+													soundEffectNameIndex = 0x194 +
+														destinationGroupBundle.groupEntriesFirstSoundIndex[destGroupDataIndeces->first] + destGroupDataIndeces->second;
+													logOutput << "\tCollection #" << destGroupDataIndeces->first + 1
+														<< ", Sound #" << destGroupDataIndeces->second << ": " << sourceBrsar.getSymbString(soundEffectNameIndex)
+														<< " (InfoIndex: 0x" << lava::numToHexStringWithPadding(currMessage->destinationGroupInfoIndex, 0x04) << ")";
+													if (!currMessage->specialMessageText.empty())
+													{
+														logOutput << currMessage->specialMessageText;
+													}
+													logOutput << "\n";
 												}
 											}
 										}

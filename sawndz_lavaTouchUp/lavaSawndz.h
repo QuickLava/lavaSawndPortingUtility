@@ -26,7 +26,7 @@ namespace lava
 	{
 		namespace sawndz
 		{
-			const std::string version = "v0.85";
+			const std::string version = "v0.95";
 			const unsigned long _HEX_TAG_RWSD = 0x52575344;
 			const unsigned long _HEX_TAG_RBNK = 0x52424E4B;
 			const unsigned long _HEX_TAG_RSEQ = 0x52534551;
@@ -491,12 +491,6 @@ namespace lava
 
 				unsigned long getGroupOffset(unsigned long groupIDIn);
 				bool listSoundsInGroup(unsigned long groupIDIn, std::ostream& output = std::cout);
-
-				/*groupPortBundle getGroupPortBundle(groupFileInfo groupInfoIn);
-				groupPortSoundCorrespondence getGroupPortSoundCorr(const groupPortBundle& sourceGroupBundle, const groupPortBundle& destinationGroupBundle);
-				bool portCorrespondingSounds(groupPortSoundCorrespondence& soundCorr, const groupPortBundle& sourceGroupBundle, groupPortBundle& destinationGroupBundle, bool portEmptySounds = 1, bool allowSharedDestinationWaveSplit = 0);
-				
-				bool portGroupToGroup(unsigned long sourceCharFIDIn, unsigned long destinationCharFIDIn, std::ostream& contentsOutput, std::ostream& logOutput = std::cout, groupPortSoundCorrespondence* soundMappingOut = nullptr);*/
 
 				bool exportSawnd(std::size_t groupID, std::string targetFilePath);
 			};
