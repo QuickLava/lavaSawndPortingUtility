@@ -70,7 +70,7 @@ namespace lava
 				unsigned long successfulMatches = ULONG_MAX;
 
 				bool outputCorrespondenceData(std::ostream& output);
-				bool summarizeResults(std::ostream& output);
+				bool outputLMPRPatch(std::ostream& output, unsigned long sourceFighterID, unsigned long destinationFighterID);
 			};
 
 			groupPortBundle getGroupPortBundle(brsarFile& sourceBrsar, groupFileInfo groupInfoIn);

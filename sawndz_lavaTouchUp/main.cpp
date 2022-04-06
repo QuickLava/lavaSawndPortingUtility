@@ -9,6 +9,7 @@ const std::string sawndFileSuffix = ".sawnd";
 const std::string logFileSuffix = "_log.txt";
 const std::string metadataFileSuffix = "_meta.txt";
 const std::string sCorrFileSuffix = "_sound.txt";
+const std::string lMPRFileSuffix = "_lMPR.xml";
 
 int stringToNum(const std::string& stringIn, bool allowNeg = 0, int defaultVal = INT_MAX)
 {
@@ -32,7 +33,7 @@ std::vector<std::pair<unsigned long, unsigned long>> parseBanksToPort(std::strin
 {
 	std::vector<std::pair<unsigned long, unsigned long>> result{};
 
-	std::cout << "Collecting pairs from \"" << filePathIn << "\"...";
+	std::cout << "Collecting pairs from \"" << filePathIn << "\"...\n";
 
 	std::ifstream banksToPort;
 	banksToPort.open(filePathIn, std::ios_base::in);
@@ -157,6 +158,23 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 						{
 							std::cerr << "Failed to generate match data for this port: unable to write to \"" << outputFileName << sCorrFileSuffix << "\".\n";
 						}
+
+						std::ofstream lMPROut(outputFileName + lMPRFileSuffix, std::ios_base::out);
+						if (lMPROut.is_open())
+						{
+							if (soundCorrReceiver.successfulMatches != ULONG_MAX)
+							{
+								soundCorrReceiver.outputLMPRPatch(lMPROut, sourceBankFighterID, destinationBankFighterID);
+							}
+							else
+							{
+								std::cerr << "Failed to generate an lMPR Patch for this port: no successful matches were recorded.\n";
+							}
+						}
+						else
+						{
+							std::cerr << "Failed to generate an lMPR Patch for this port: unable to write to \"" << outputFileName << lMPRFileSuffix << "\".\n";
+						}
 					}
 					else
 					{
@@ -201,7 +219,7 @@ bool portAllFighterBanksToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, u
 	return result;
 }
 
-int portAllBanksMain(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
@@ -226,7 +244,7 @@ int portAllBanksMain(int argc, char* argv[])
 	return 0;
 }
 
-int main(int argc, char* argv[])
+int portSingleBankMain(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";

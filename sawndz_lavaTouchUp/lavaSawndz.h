@@ -26,7 +26,7 @@ namespace lava
 	{
 		namespace sawndz
 		{
-			const std::string version = "v0.95";
+			const std::string version = "v0.98";
 			const unsigned long _HEX_TAG_RWSD = 0x52575344;
 			const unsigned long _HEX_TAG_RBNK = 0x52424E4B;
 			const unsigned long _HEX_TAG_RSEQ = 0x52534551;
@@ -34,14 +34,6 @@ namespace lava
 			const unsigned long _EMPTY_SOUND_SOUND_LENGTH = 0x02;
 			const unsigned long _EMPTY_SOUND_TOTAL_LENGTH = 0x20;
 			const unsigned long _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE = 0xDEADDEED;
-
-			enum class rsarFileSectionType
-			{
-				rFST_RWSD = 0,
-				rFST_RBNK,
-				rFST_RSEQ,
-				rsarFileSectionTypeCount
-			};
 
 			struct groupFileInfo
 			{
