@@ -120,7 +120,7 @@ namespace lava
 					std::pair<unsigned long, unsigned long> collectionIndeces = collectionsOrder[i];
 					if (collectionIndeces.first == 0)
 					{
-						rwsd* currRWSD = &activeCollectionRWSDs[i];
+						rwsd* currRWSD = &activeCollectionRWSDs[collectionIndeces.second];
 						for (unsigned long u = 0; u < currRWSD->waveSection.entries.size(); u++)
 						{
 							waveInfo* currEntry = &currRWSD->waveSection.entries[u];
@@ -203,6 +203,7 @@ namespace lava
 					output << "<?xml version=\"1.0\"?>\n";
 					output << "<!--This patch was produced automatically using lavaSawndPortingUtility " << version << ".-->\n";
 					output << "<!--It is intended for use with lavaMontyPythonReimp (Github Page: https://github.com/QuickLava/lavaMontyPythonReimp/ ).-->\n";
+					output << "<!--Note: Remember to change Death and Damage SFX IDs in PSACompressor after running this patch!-->\n";
 					output << "<movesetPatch name = \""; 
 					auto sourceFighterNameItr = lava::brawl::LAVA_CHARA_FID_TO_NAME.find(sourceFighterID);
 					auto destFighterNameItr = lava::brawl::LAVA_CHARA_FID_TO_NAME.find(destinationFighterID);

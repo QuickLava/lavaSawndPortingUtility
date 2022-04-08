@@ -26,7 +26,7 @@ namespace lava
 	{
 		namespace sawndz
 		{
-			const std::string version = "v0.98";
+			const std::string version = "v1.0.0";
 			const unsigned long _HEX_TAG_RWSD = 0x52575344;
 			const unsigned long _HEX_TAG_RBNK = 0x52424E4B;
 			const unsigned long _HEX_TAG_RSEQ = 0x52534551;

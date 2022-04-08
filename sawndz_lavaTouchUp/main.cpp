@@ -9,7 +9,13 @@ const std::string sawndFileSuffix = ".sawnd";
 const std::string logFileSuffix = "_log.txt";
 const std::string metadataFileSuffix = "_meta.txt";
 const std::string sCorrFileSuffix = "_sound.txt";
+
+// Toggles lMPR patch generation. Will be disabled in release builds until I figure out how to edit Misc. Sound Lists.
+// The existing "Porting Tools" SFX Changer can do this just fine, that should be prefered at least until I figure this out.
+#define ENABLE_LMPR_OUTPUT false
+#if ENABLE_LMPR_OUTPUT == true
 const std::string lMPRFileSuffix = "_lMPR.xml";
+#endif
 
 int stringToNum(const std::string& stringIn, bool allowNeg = 0, int defaultVal = INT_MAX)
 {
@@ -26,6 +32,28 @@ int stringToNum(const std::string& stringIn, bool allowNeg = 0, int defaultVal =
 	{
 		result = defaultVal;
 	}
+	return result;
+}
+
+unsigned long lookForFIDFromName(std::string nameIn)
+{
+	unsigned long result = ULONG_MAX;
+
+	nameIn = lava::stringToUpper(nameIn);
+	std::unordered_map<unsigned long, std::string>::const_iterator i = lava::brawl::LAVA_CHARA_FID_TO_NAME.begin();
+	std::unordered_map<unsigned long, std::string>::const_iterator endItr = lava::brawl::LAVA_CHARA_FID_TO_NAME.end();
+	while (result == ULONG_MAX && i != endItr)
+	{
+		if (nameIn == i->second)
+		{
+			result = i->first;
+		}
+		else
+		{
+			i++;
+		}
+	}
+
 	return result;
 }
 
@@ -58,7 +86,15 @@ std::vector<std::pair<unsigned long, unsigned long>> parseBanksToPort(std::strin
 				std::size_t delimLoc = manipStr.find(',');
 				if (delimLoc != std::string::npos && delimLoc < (manipStr.size() - 1))
 				{
-					std::pair<unsigned long, unsigned long> newEntry = std::make_pair(stringToNum(manipStr.substr(0, delimLoc)), stringToNum(manipStr.substr(delimLoc + 1)));
+					std::pair<unsigned long, unsigned long> newEntry = std::make_pair(stringToNum(manipStr.substr(0, delimLoc), 0, ULONG_MAX), stringToNum(manipStr.substr(delimLoc + 1), 0, ULONG_MAX));
+					if (newEntry.first == ULONG_MAX)
+					{
+						newEntry.first = lookForFIDFromName(manipStr.substr(0, delimLoc));
+					}
+					if (newEntry.second == ULONG_MAX)
+					{
+						newEntry.second = lookForFIDFromName(manipStr.substr(delimLoc + 1, std::string::npos));
+					}
 
 					auto firstIDNameItr = lava::brawl::LAVA_CHARA_FID_TO_NAME.find(newEntry.first);
 					if (firstIDNameItr != lava::brawl::LAVA_CHARA_FID_TO_NAME.end())
@@ -71,19 +107,19 @@ std::vector<std::pair<unsigned long, unsigned long>> parseBanksToPort(std::strin
 						}
 						else
 						{
-							std::cerr << "[ERROR] Skipping Fighter ID Pair: Invalid Destination Fighter ID (0x" << lava::numToHexStringWithPadding(newEntry.second, 0x02) << ").\n";
+							std::cerr << "[ERROR] Skipping Fighter Pair: Invalid Destination Fighter Specified (\"" << manipStr.substr(delimLoc + 1, std::string::npos) << "\").\n";
 						}
 					}
 					else
 					{
-						std::cerr << "[ERROR] Skipping Fighter ID Pair: Invalid Source Fighter ID (0x" << lava::numToHexStringWithPadding(newEntry.first, 0x02) << ").\n";
+						std::cerr << "[ERROR] Skipping Fighter Pair: Invalid Source Fighter Specified (\"" << manipStr.substr(0, delimLoc) << "\").\n";
 					}
 				}
 			}
 		}
 		if (result.empty())
 		{
-			std::cerr << "[WARNING] Successfully loaded input file, but found no valid Fighter ID pairs. Ensure that at least one pair of valid Fighter IDs exists in that file, and try again.\n";
+			std::cerr << "[WARNING] Successfully loaded input file, but found no valid fighter pairs.\n";
 		}
 	}
 	else
@@ -159,6 +195,7 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 							std::cerr << "Failed to generate match data for this port: unable to write to \"" << outputFileName << sCorrFileSuffix << "\".\n";
 						}
 
+#if ENABLE_LMPR_OUTPUT == true
 						std::ofstream lMPROut(outputFileName + lMPRFileSuffix, std::ios_base::out);
 						if (lMPROut.is_open())
 						{
@@ -175,6 +212,7 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 						{
 							std::cerr << "Failed to generate an lMPR Patch for this port: unable to write to \"" << outputFileName << lMPRFileSuffix << "\".\n";
 						}
+#endif
 					}
 					else
 					{
@@ -219,7 +257,7 @@ bool portAllFighterBanksToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, u
 	return result;
 }
 
-int main(int argc, char* argv[])
+int portAllBanksMain(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
@@ -244,7 +282,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-int portSingleBankMain(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
