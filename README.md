@@ -5,12 +5,14 @@ Based directly on work by:
 - Jaklub and Agoaj, as well as mstaklo, ssbbtailsfan, stickman and VILE (Sawndz, Super Sawndz)
 - Soopercool101, as well as Kryal, BlackJax96, and libertyernie (BrawlLib, BrawlBox, BrawlCrate)
 
-# Using this Program to Port Soundbanks for Use With BrawlEX/P+EX Characters
+# Using this Program to Port Soundbanks for Use With BrawlEX/P+EX Clones
 ## Pre-built Soundbanks
 If you intend to base your clone's soundbank off of a vanilla Brawl character's, you actually don't need to use this program at all! They've all been ported ahead of time, and can be found [here](https://drive.google.com/drive/folders/1Cb-1fEHXq6LIsUFkfyqixGgCxMRnP_PR).
 Simply grab the appropriate .zip for your desire character's soundbank, and follow the instructions below, starting at Step 3.
 
 ## Necessary Materials
+- A functional BrawlEX/P+EX clone, with a unique Soundbank ID assigned in their "FighterConfigXX.dat". Follow the official [BrawlEX Guide for P+Ex](https://docs.google.com/document/d/1ZoL_qDcwUpUXg82cKaUp-6D_AcfpFctoW6GXFY74_0k/edit#) if you don't have this done yet.
+
 - [The latest release](https://github.com/QuickLava/lavaSawndPortingUtility/releases) of this program.
 
 - The latest release of [lavaSawndIDReplaceAssist](https://github.com/QuickLava/lavaSawndIDReplaceAssist/releases).
@@ -62,3 +64,19 @@ Simply grab the appropriate .zip for your desire character's soundbank, and foll
 - Copy that file into your build's "/pf/sfx/" directory on your (virtual or non-virtual) SD Card.
 - Rename the edited moveset file from Step 6 appropriately, then copy it into your clone's folder in your build's "pf/fighter/" directory.
 
+# Answers to Anticipated Questions
+>Q: My character is completely silent in-game, what happened?
+
+A: This is almost certainly a Soundbank ID issue, make sure that you correctly entered your clone's Soundbank ID at every step of this guide. Be especially mindful about whether or not you're providing/looking at decimal or hexadecimal numbers at any given point.
+>Q: My character mostly works, but sometimes produces unexpected/incorrect sounds.
+
+A: This is likely because certain sounds in your source soundbank couldn't be properly mapped to a sound in your destination soundbank, causing every time your moveset calls that sound to instead call a default sound that *did* make it into the resulting bank.
+>Q: Can I edit soundbanks produced by this process after the fact?
+
+A: Absolutely! The banks produced by this program are normal .sawnd files; just import it into your "smashbros_sound.brsar" using SuperSawndz, then open the .brsar in BrawlCrate and edit as normal.
+>Q: One of the programs used for this process crashed or isn't working, what do I do?
+
+A: If it's one of my programs (usually prefixed by "lava"), you can always DM me on Discord (QuickLava#6688) or Twitter (@QuickLava) for help. If it's not one of mine, you can either ask around the various Brawl Modding discords, or I can still try to help (though I can't guarantee much in the way of solutions in that case). 
+>Q: There's a missing step/there's an error/something is unclear in some part of this guide, how can I get it fixed?
+
+A: Same as the above, DM me and I'll get it sorted as quickly as possible.
