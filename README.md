@@ -47,7 +47,7 @@ Simply grab the appropriate .zip for your desire character's soundbank, and cont
 - Open your character's moveset file (typically named "Fit[Character].pac", as in "FitMario.pac") in BrawlCrate.
 - Right-click the "Misc Data[0]" entry, select "Export", and save the file as "moveset.dat". Proceed to the next step.
 ### Step 5: Running "sfxchange.exe" (Porting_Tools)
-- Extract the "Porting_Tools.zip" file, and copy the "moveset.dat" file you extracted into that folder.
+- Extract the "Porting_Tools.zip" file, and copy the "moveset.dat" file you exported in Step 4 into that folder.
 - Copy the file you got from Step 2 which ends in "_sound.txt" into this folder, and rename it to "sound.txt".
 - Run the "run_sfxchange.bat" file.
 - Move your old "moveset.dat" file somewhere else, then rename the newly produced "moveset_sfxconverted.dat" file to "moveset.dat".
@@ -55,7 +55,7 @@ Simply grab the appropriate .zip for your desire character's soundbank, and cont
 - Run the "run_sfxchange.bat" file again.
 ### Step 6: Replacing your Character's Old "Misc Data[0]"
 - Reopen your character's moveset file in BrawlCrate.
-- Right-click the "Misc Data[0]" entry, and select "Replace", then navigate to and select your "moveset_sfxconverted.dat" file from Step 4.
+- Right-click the "Misc Data[0]" entry, and select "Replace", then navigate to and select your "moveset_sfxconverted.dat" file from Step 5.
 - Save the newly edited moveset file.
 ### Step 7: Place the New .sawnd and Moveset File onto your SD Card.
 - Rename the .sawnd file you got from Step 2 appropriately. For P+EX clones, the name of this file should be the same as the Soundbank ID defined in the clone's "FighterConfigXX.dat".
