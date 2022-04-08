@@ -1,16 +1,14 @@
 .vs/**
-Debug/**
-Release/**
-sawndz_lavaTouchUp/Debug/**
-sawndz_lavaTouchUp/Release/**
-sawndz_lavaTouchUp/*.sawnd
-sawndz_lavaTouchUp/*.brsar
-sawndz_lavaTouchUp/*.bak
-sawndz_lavaTouchUp/*.dat
-sawndz_lavaTouchUp/Junk/**
-sawndz_lavaTouchUp/EX Soundbanks/**
-sawndz_lavaTouchUp/Ported Soundbanks/**
-sawndz_lavaTouchUp/*.txt
-!sawndz_lavaTouchUp/soundbanksToPort.txt
-!sawndz_lavaTouchUp/soundNameOverrides.txt
+x64/**
+lavaSawndPortingUtility/x64/**
+lavaSawndPortingUtility/*.sawnd
+lavaSawndPortingUtility/*.brsar
+lavaSawndPortingUtility/*.bak
+lavaSawndPortingUtility/*.dat
+lavaSawndPortingUtility/Junk/**
+lavaSawndPortingUtility/EX Soundbanks/**
+lavaSawndPortingUtility/Ported Soundbanks/**
+lavaSawndPortingUtility/*.txt
+!lavaSawndPortingUtility/soundbanksToPort.txt
+!lavaSawndPortingUtility/soundNameOverrides.txt
 !**/.gitkeep

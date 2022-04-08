@@ -27,9 +27,6 @@
     <ClCompile Include="lavaByteArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="oldSawndz.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lavaSawndPortingUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
