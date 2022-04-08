@@ -7,8 +7,8 @@ Based directly on work by:
 
 # Using this Program to Port Soundbanks for Use With BrawlEX/P+EX Characters
 ## Pre-built Soundbanks
-If you intend to use a vanilla Brawl character's soundbank, you actually don't need to use this program at all! They've all been ported ahead of time, and can be found [here](https://drive.google.com/drive/folders/1Cb-1fEHXq6LIsUFkfyqixGgCxMRnP_PR).
-Simply grab the appropriate .zip for your desire character's soundbank, and continue with following the guide from Step 9.
+If you intend to base your clone's soundbank off of a vanilla Brawl character's, you actually don't need to use this program at all! They've all been ported ahead of time, and can be found [here](https://drive.google.com/drive/folders/1Cb-1fEHXq6LIsUFkfyqixGgCxMRnP_PR).
+Simply grab the appropriate .zip for your desire character's soundbank, and follow the instructions below, starting at Step 3.
 
 ## Necessary Materials
 - [The latest release](https://github.com/QuickLava/lavaSawndPortingUtility/releases) of this program.
@@ -41,7 +41,7 @@ Simply grab the appropriate .zip for your desire character's soundbank, and cont
 - Collect the output files from the included "Ported Soundbanks" folder, and proceed to the next step.
 ### Step 3: Running lavaSawndIDReplaceAssist
 - Extract the lavaSawndIDReplaceAssist release .zip.
-- Run "lavaSawndIDReplaceAssist.exe", and follow the on-screen prompts (type the number associated with the selections you want to make).
+- Run "lavaSawndIDReplaceAssist.exe", select the "Snake->EX" action, then follow the on-screen prompts (type the number associated with the selections you want to make). Be aware: if you're setting up a soundbank for a P+EX clone, add 7 to your clone's Soundbank ID when asked for it.
 - Collect the output files from the included "Soundbank_Mapping_Output" folder, and proceed to the next step.
 ### Step 4: Extracting your Character's "moveset.dat"
 - Open your character's moveset file (typically named "Fit[Character].pac", as in "FitMario.pac") in BrawlCrate.
