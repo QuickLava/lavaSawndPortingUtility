@@ -977,7 +977,7 @@ namespace lava
 
 					destinationStream << "WAVE";
 					lava::writeRawDataToStream(destinationStream, length);
-					lava::writeRawDataToStream(destinationStream, entries.size());
+					lava::writeRawDataToStream<unsigned long>(destinationStream, entries.size());
 
 					for (unsigned long i = 0x0; i < entryOffsets.size(); i++)
 					{

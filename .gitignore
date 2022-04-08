@@ -1,6 +1,10 @@
 .vs/**
 x64/**
+Debug/**
+Release/**
 lavaSawndPortingUtility/x64/**
+lavaSawndPortingUtility/Debug/**
+lavaSawndPortingUtility/Release/**
 lavaSawndPortingUtility/*.sawnd
 lavaSawndPortingUtility/*.brsar
 lavaSawndPortingUtility/*.bak
