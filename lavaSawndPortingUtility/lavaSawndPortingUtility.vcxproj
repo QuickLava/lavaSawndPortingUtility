@@ -22,8 +22,9 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{aedd6577-f6b9-4a90-9566-76ea9b39df91}</ProjectGuid>
-    <RootNamespace>sawndzlavaTouchUp</RootNamespace>
+    <RootNamespace>lavaSawndPortingUtility</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>lavaSawndPortingUtility</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -139,7 +140,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lavaByteArray.cpp" />
+    <ClCompile Include="lavaSawndPortingUtility.cpp" />
+    <ClCompile Include="lavaSPUUtility.cpp" />
+    <ClCompile Include="lavaSawndz.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="lavaSawndPortingUtility.h" />
+    <ClInclude Include="lavaBrawlConstants.h" />
+    <ClInclude Include="lavaByteArray.h" />
+    <ClInclude Include="lavaSPUUtility.h" />
+    <ClInclude Include="lavaSawndz.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

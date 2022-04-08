@@ -1,0 +1,15 @@
+# Add new entries to this file in the following format:
+# {Source Character Fighter ID}, {Target Character Fighter ID}
+# For instance, the following line...
+# 	0x00, 0x2E
+# ... would generate a Snake .sawnd with Mario's sounds and properties ported over.
+#
+# Alternatively, you may add entries in the following format:
+# {Source Character Internal Name}, {Target Character Internal Name}
+# For instance, the following line...
+#	Koopa, Snake
+# ... would generate a Snake .sawnd with Bowser's sounds and properties ported over.
+#
+# Note: Any Fighter ID not prefixed with "0x" will be read as a decimal number.
+# Note: Internal Names are the names used on characters' Fit____.pac files (eg. "FitMario.pac").
+# Note: Lines starting with a hashtag ('#') or a forward slash ('/') are ignored.
