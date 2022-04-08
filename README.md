@@ -21,13 +21,13 @@ Simply grab the appropriate .zip for your desire character's soundbank, and foll
 
 - A copy of JOJI's [Empty Snake Soundbank](https://ux.getuploader.com/ssbbhack/download/45).
 
-- Codes' "Porting_Tools.zip", linked in the official [BrawlEX Guide for P+Ex](https://docs.google.com/document/d/1ZoL_qDcwUpUXg82cKaUp-6D_AcfpFctoW6GXFY74_0k/edit#).
+- Codes' "Porting_Tools.zip", linked near the top of the official [BrawlEX Guide for P+Ex](https://docs.google.com/document/d/1ZoL_qDcwUpUXg82cKaUp-6D_AcfpFctoW6GXFY74_0k/edit#).
 
 - The latest release of [SuperSawndz](http://forums.kc-mm.com/Gallery/BrawlView.php?Number=27683) (or, if that's down, use this [mirror](https://gamebanana.com/tools/6278) on GameBanana).
 
 ## Instructions
 
-### Step 1: Inserting Joji's Blank Snake Soundbank
+### Step 1: Inserting JOJI's Blank Snake Soundbank
 - Extract the SuperSawndz release .zip, and place your "smashbros_sound.brsar" into the same folder as the included executables.
 - Extract JOJI's Empty Snake Soundbank .zip, and place the included "44.sawnd" file into the same folder as your "smashbros_sound.brsar".
 - Run "Super Sawndz.exe", and click the "..." button above the "Insert" button, then navigate to and select your "44.sawnd" file.
