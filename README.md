@@ -1,6 +1,6 @@
 # lavaSawndPortingUtility
 A program which automates the process of porting sound effects and properties from one character's soundbank to another, and automatically generates patch files for use with programs that edit SFX ID references in Super Smash Bros. Brawl moveset files. 
-## Credits
+
 This program was based directly on work by:
 - Jaklub and Agoaj, as well as mstaklo, ssbbtailsfan, stickman and VILE (Sawndz, Super Sawndz)
 - Soopercool101, as well as Kryal, BlackJax96, and libertyernie (BrawlLib, BrawlBox, BrawlCrate)
