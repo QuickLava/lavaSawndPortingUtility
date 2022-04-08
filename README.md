@@ -1,7 +1,7 @@
 # lavaSawndPortingUtility
 A program which automates the process of porting sound effects and properties from one character's soundbank to another, and automatically generates patch files for use with programs that edit SFX ID references in Super Smash Bros. Brawl moveset files. 
-
-Based directly on work by:
+## Credits
+This program was based directly on work by:
 - Jaklub and Agoaj, as well as mstaklo, ssbbtailsfan, stickman and VILE (Sawndz, Super Sawndz)
 - Soopercool101, as well as Kryal, BlackJax96, and libertyernie (BrawlLib, BrawlBox, BrawlCrate)
 
@@ -64,19 +64,27 @@ Simply grab the appropriate .zip for your desire character's soundbank, and foll
 - Copy that file into your build's "/pf/sfx/" directory on your (virtual or non-virtual) SD Card.
 - Rename the edited moveset file from Step 6 appropriately, then copy it into your clone's folder in your build's "pf/fighter/" directory.
 
-# Answers to Anticipated Questions
->Q: My character is completely silent in-game, what happened?
+# Answers to Anticipated Questions and Issues
+>My clone is completely silent in-game, what happened?
 
-A: This is almost certainly a Soundbank ID issue, make sure that you correctly entered your clone's Soundbank ID at every step of this guide. Be especially mindful about whether or not you're providing/looking at decimal or hexadecimal numbers at any given point.
->Q: My character mostly works, but sometimes produces unexpected/incorrect sounds.
+This is almost certainly a Soundbank ID issue, make sure that you correctly entered your clone's Soundbank ID at every step of this guide. Be especially mindful about whether or not you're providing/looking at decimal or hexadecimal numbers at any given point.
 
-A: This is likely because certain sounds in your source soundbank couldn't be properly mapped to a sound in your destination soundbank, causing every time your moveset calls that sound to instead call a default sound that *did* make it into the resulting bank.
->Q: Can I edit soundbanks produced by this process after the fact?
+>My clone causes an infinite load when entering/exiting matches, what's going on?
 
-A: Absolutely! The banks produced by this program are normal .sawnd files; just import it into your "smashbros_sound.brsar" using SuperSawndz, then open the .brsar in BrawlCrate and edit as normal.
->Q: One of the programs used for this process crashed or isn't working, what do I do?
+This is most likely because the character's .sawnd file is too big; in my observations, it seems to happen most often past the 950kb mark. To trim it down, I'd suggest either downsampling or entirely removing some of the sounds in your .sawnd; which you can do by importing the file into your "smashbros_sound.brsar" using SuperSawndz, then opening that file in BrawlCrate and editing from there.
 
-A: If it's one of my programs (usually prefixed by "lava"), you can always DM me on Discord (QuickLava#6688) or Twitter (@QuickLava) for help. If it's not one of mine, you can either ask around the various Brawl Modding discords, or I can still try to help (though I can't guarantee much in the way of solutions in that case). 
->Q: There's a missing step/there's an error/something is unclear in some part of this guide, how can I get it fixed?
+>My clone mostly works, but sometimes produces unexpected/incorrect sounds.
 
-A: Same as the above, DM me and I'll get it sorted as quickly as possible.
+This is likely because certain sounds in your source soundbank couldn't be properly mapped to a sound in your destination soundbank, causing every time your moveset calls that sound to instead call a default sound that *did* make it into the resulting bank.
+
+>Can I edit soundbanks produced by this process after the fact?
+
+Absolutely! The banks produced by this program are normal .sawnd files; just import it into your "smashbros_sound.brsar" using SuperSawndz, then open the .brsar in BrawlCrate and edit as normal.
+
+>One of the programs used for this process crashed or isn't working, what do I do?
+
+If it's one of my programs (usually prefixed by "lava"), you can always DM me on Discord (QuickLava#6688) or Twitter (@QuickLava) for help. If it's not one of mine, you can either ask around the various Brawl Modding discords, or I can still try to help (though I can't guarantee much in the way of solutions in that case). 
+
+>There's a missing step/there's an error/something is unclear in some part of this guide, how can I get it fixed?
+
+Same as the above, DM me and I'll get it sorted as quickly as possible.
