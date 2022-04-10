@@ -826,7 +826,7 @@ namespace lava
 				if (address != ULONG_MAX)
 				{
 					auto divResult = ldiv(nibbles, 2);
-					result = divResult.quot + 1;
+					result = divResult.quot + divResult.rem;
 				}
 
 				return result;
