@@ -179,10 +179,8 @@ namespace lava
 					{
 						output << "0x" << lava::numToHexStringWithPadding(i.first, 0x04) << " 0x" << lava::numToHexStringWithPadding(i.second, 0x04) << "\n";
 					}
-
 					for (auto i : failedMatches)
 					{
-						output << "\n";
 						std::vector<groupPortEntryMessageBundle>* indexPairVec = &i.second;
 						for (unsigned long u = 0; u < indexPairVec->size(); u++)
 						{
