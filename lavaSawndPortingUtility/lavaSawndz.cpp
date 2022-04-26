@@ -1119,7 +1119,18 @@ result = 1;
 							{
 								unsigned long nextEntryDataLocation = waveSection.entries[associatedDataInfo->ntWaveIndex + 1].dataLocation;
 								unsigned long currentEntryWaveInfoEnd = associatedWaveInfo->dataLocation + associatedWaveInfo->getLengthInBytes();
-								associatedWaveInfo->packetContents.paddingLength = nextEntryDataLocation - currentEntryWaveInfoEnd;
+								if (nextEntryDataLocation >= currentEntryWaveInfoEnd)
+								{
+									associatedWaveInfo->packetContents.paddingLength = nextEntryDataLocation - currentEntryWaveInfoEnd;
+								}
+								else
+								{
+									unsigned long overlapSize = currentEntryWaveInfoEnd - nextEntryDataLocation;
+									associatedWaveInfo->nibbles -= overlapSize * 2;
+									associatedWaveInfo->packetContents.length -= overlapSize;
+									associatedWaveInfo->packetContents.paddingLength = 0x00;
+									std::cout << "Warning: Wave Packet Truncation performed! Lost 0x" << lava::numToHexStringWithPadding(overlapSize, 0x02) << " byte(s) as a result.\n";
+								}
 							}
 							else
 							{
