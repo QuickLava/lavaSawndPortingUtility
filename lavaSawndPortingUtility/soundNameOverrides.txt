@@ -14,13 +14,14 @@
 
 // Link Overrides (Destructive)
 "snd_se_link_DSpecialNStart", "snd_se_042"
-"snd_se_link_DSpecialNEnd", "snd_se_043"
 "snd_se_link_DSpecialHi", "snd_se_046"
 "snd_se_link_DSpecialAirHi", "snd_se_047"
 "snd_se_link_DSpecialS1", "snd_se_Special_S04"
 "snd_se_link_DSpecialS2", "snd_se_Special_S05"
 "snd_se_link_DSpecialLw1", "snd_se_Special_L02"
 "snd_se_link_DSpecialLw2", "snd_se_Special_L03"
+"snd_se_link_DSpecialNEnd","snd_se_down01"
+"snd_se_link_043", "snd_se_down02"
 
 // Meta Knight Overrides
 "snd_vc_metaknight_atk01", "snd_vc_Attack01"
@@ -44,16 +45,15 @@
 "snd_vc_metaknight_gake", "snd_vc_CliffCatch"
 "snd_vc_metaknight_mochiage", "snd_vc_HeavyGet"
 "snd_vc_metaknight_ukemi", "snd_vc_Passive"
-"snd_vc_metaknight_hissatu_cyo01", "snd_vc_006"
-"snd_vc_metaknight_hissatu_cyo02", "snd_vc_007"
-"snd_vc_metaknight_hissatu_cyo03", "snd_vc_008"
-"snd_vc_metaknight_win04", "snd_vc_009"
-// Meta Knight Overrides (Destructive)
-"snd_vc_metaknight_atk_hyaku", "snd_vc_001"
-"snd_vc_metaknight_hissatu_ue", "snd_vc_002"
-"snd_vc_metaknight_hissatu_yoko", "snd_vc_003"
-"snd_vc_metaknight_hissatu_shita", "snd_vc_004"
-"snd_vc_metaknight_kakkuu", "snd_vc_005"
+"snd_vc_metaknight_win04", "snd_vc_006"
+"snd_vc_metaknight_atk_hyaku", "snd_vc_007"
+"snd_vc_metaknight_hissatu_yoko", "snd_vc_008"
+"snd_vc_metaknight_hissatu_ue", "snd_vc_009"
+"snd_vc_metaknight_hissatu_shita", "snd_vc_010"
+"snd_vc_metaknight_hissatu_cyo01", "snd_vc_011"
+"snd_vc_metaknight_hissatu_cyo02", "snd_vc_012"
+"snd_vc_metaknight_hissatu_cyo03", "snd_vc_013"
+"snd_vc_metaknight_kakkuu", "snd_vc_jump02"
 
 // Pit Overrides
 "snd_vc_pit_atk01", "snd_vc_Attack01"
@@ -77,14 +77,12 @@
 "snd_vc_pit_gake", "snd_vc_CliffCatch"
 "snd_vc_pit_mochiage", "snd_vc_HeavyGet"
 "snd_vc_pit_ukemi", "snd_vc_Passive"
-"snd_vc_pit_hissatu_cyo02", "snd_vc_007"
-// Pit Overrides (Destructive)
-"snd_vc_pit_atk_hyaku", "snd_vc_001"
-"snd_vc_pit_hissatu_n", "snd_vc_002"
-"snd_vc_pit_hissatu_yoko", "snd_vc_003"
-"snd_vc_pit_hissatu_shita01", "snd_vc_004"
-"snd_vc_pit_hissatu_shita02", "snd_vc_005"
-"snd_vc_pit_hissatu_cyo01", "snd_vc_006"
+"snd_vc_pit_hissatu_n", "snd_vc_007"
+"snd_vc_pit_hissatu_yoko", "snd_vc_008"
+"snd_vc_pit_hissatu_shita01", "snd_vc_009"
+"snd_vc_pit_hissatu_shita02", "snd_vc_010"
+"snd_vc_pit_hissatu_cyo01", "snd_vc_011"
+"snd_vc_pit_hissatu_cyo02", "snd_vc_012"
 
 // Dedede Overrides
 "snd_vc_dedede_atk01", "snd_vc_Attack01"
@@ -142,3 +140,6 @@
 "snd_se_peach_Attack_Smash01_Fryingpan", "snd_se_006"
 "snd_se_peach_Attack_Smash02_Golfclub", "snd_se_007"
 "snd_se_peach_Attack_Smash03_Tennisracket", "snd_se_008"
+
+// Kirby Overrides
+"snd_se_kirby_Special_N06", "snd_se_Special_S04"
