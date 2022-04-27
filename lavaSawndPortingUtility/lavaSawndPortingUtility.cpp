@@ -47,10 +47,6 @@ namespace lava
 						std::vector<dataInfo>* dataVector = &activeCollectionRWSDs[i].dataSection.entries;
 						for (unsigned long u = 0; u < dataVector->size(); u++)
 						{
-							if (i == 0 && u == 0x2E)
-							{
-								int test = 1;
-							}
 							populateWavePacket(bodyIn, i, u);
 						}
 					}
@@ -128,7 +124,7 @@ namespace lava
 							{
 								//std::cout << "Collection " << i << ", Wave 0x" << lava::numToHexStringWithPadding(u, 0x04) << "\n";
 								//std::cout << "\tOutput Stream Pos: 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
-								std::vector<char>* currEntryPacketBodyPtr = (std::vector<char>*) & currEntry->packetContents.body;
+								std::vector<char>* currEntryPacketBodyPtr = (std::vector<char>*) (&currEntry->packetContents.body);
 								outputStream.write(currEntryPacketBodyPtr->data(), currEntryPacketBodyPtr->size());
 								//std::cout << "\tOutput Stream Pos (Post Data-Write): 0x" << lava::numToHexStringWithPadding(outputStream.tellp(), 0x08) << "\n";
 								std::vector<char> padding{};
@@ -145,8 +141,50 @@ namespace lava
 							}
 							else
 							{
-								std::cerr << "Couldn't Export Wave Data for Collection " << i << ", Wave #" << u << "\n";
-								std::cerr << "Packet contents not populated.\n";
+								unsigned long prevEndLoc = ULONG_MAX;
+								unsigned long nextStartLoc = ULONG_MAX;
+								if (u > 0)
+								{
+									waveInfo* prevEntry = &currRWSD->waveSection.entries[u - 1];
+									if (prevEntry != nullptr && prevEntry->packetContents.populated)
+									{
+										prevEndLoc = prevEntry->dataLocation + prevEntry->packetContents.body.size() + prevEntry->packetContents.paddingLength;
+									}
+								}
+								else
+								{
+									prevEndLoc = 0;
+								}
+								if (u < (currRWSD->waveSection.entries.size() - 1))
+								{
+									waveInfo* nextEntry = &currRWSD->waveSection.entries[u + 1];
+									if (nextEntry != nullptr)
+									{
+										nextStartLoc = nextEntry->dataLocation;
+									}
+								}
+								else
+								{
+									nextStartLoc = groupHeader.waveDataLength;
+								}
+								if (prevEndLoc != ULONG_MAX && nextStartLoc != ULONG_MAX)
+								{
+									std::cout << "Packet for Collection " << i << ", Wave 0x" << lava::numToHexStringWithPadding(u, 0x02) << " wasn't populated, exporting improvized packet!\n";
+
+									currEntry->packetContents.address = _NOT_IN_FILE_ADDRESS;
+									currEntry->packetContents.populated = 1;
+									currEntry->packetContents.body.clear();
+									currEntry->packetContents.body.resize(nextStartLoc - prevEndLoc, 0x00);
+									currEntry->packetContents.length = currEntry->packetContents.body.size();
+									currEntry->packetContents.paddingLength = 0;
+									std::vector<char>* improvizedPacketBodyPtr = (std::vector<char>*) (&currEntry->packetContents.body);
+									outputStream.write(improvizedPacketBodyPtr->data(), improvizedPacketBodyPtr->size());
+								}
+								else
+								{
+									std::cerr << "Couldn't Export Wave Data for Collection " << i << ", Wave #" << u << "\n";
+									std::cerr << "Packet contents not populated, and unable to determine appropriate bounds for an improvized packet!\n";
+								}
 							}
 						}
 					}
@@ -530,6 +568,7 @@ namespace lava
 								if (portEmptySounds || copySourceWave->nibbles >= 3)
 								{
 									long changeInSize = destinationGroupBundle.activeCollectionRWSDs[copyDestCollIndex].overwriteSound(copyDestDataIndex, *copySourceData, *copySourceWave, allowSharedDestinationWaveSplit);
+
 									if (changeInSize != ULONG_MAX)
 									{
 										if (changeInSize != _OVERWRITE_SOUND_SHARED_WAVE_RETURN_CODE)
