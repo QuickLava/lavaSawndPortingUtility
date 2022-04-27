@@ -203,26 +203,22 @@ namespace lava
 			{
 				bool result = 0;
 
-				if (output.good())
+				if (output.good() && !matches.empty())
 				{
-					std::map<unsigned long, unsigned long> sortedIndeces{};
 					for (auto i : matches)
 					{
 						if (i.second.sourceGroupDataIndex.first != ULONG_MAX && i.second.sourceGroupDataIndex.second != ULONG_MAX)
 						{
-							sortedIndeces[i.second.sourceGroupInfoIndex] = i.second.destinationGroupInfoIndex;
+							output << "0x" << lava::numToHexStringWithPadding(i.second.sourceGroupInfoIndex, 0x04) 
+								<< " 0x" << lava::numToHexStringWithPadding(i.second.destinationGroupInfoIndex, 0x04) << "\n";
 						}
-					}
-					for (auto i : sortedIndeces)
-					{
-						output << "0x" << lava::numToHexStringWithPadding(i.first, 0x04) << " 0x" << lava::numToHexStringWithPadding(i.second, 0x04) << "\n";
 					}
 					for (auto i : failedMatches)
 					{
 						std::vector<groupPortEntryMessageBundle>* indexPairVec = &i.second;
 						for (unsigned long u = 0; u < indexPairVec->size(); u++)
 						{
-							output << "0x" << lava::numToHexStringWithPadding((*indexPairVec)[u].sourceGroupInfoIndex, 0x04) << " 0x" << lava::numToHexStringWithPadding(sortedIndeces.begin()->second, 0x04) << "\n";
+							output << "0x" << lava::numToHexStringWithPadding((*indexPairVec)[u].sourceGroupInfoIndex, 0x04) << " 0x" << lava::numToHexStringWithPadding(matches.begin()->second.destinationGroupInfoIndex, 0x04) << "\n";
 						}
 					}
 					result = output.good();
@@ -670,7 +666,7 @@ namespace lava
 						{
 							groupPortBundle sourceGroupBundle = getGroupPortBundle(sourceBrsar, sourceGroupFileInfo->second);
 							groupPortBundle destinationGroupBundle = getGroupPortBundle(sourceBrsar, destinationGroupFileInfo->second);
-							logOutput << "Copying Sounds from Group 0x" << lava::numToHexStringWithPadding(sourceGroupFileInfo->second.groupID, 0x03) << " to Group 0x" << lava::numToHexStringWithPadding(destinationGroupFileInfo->second.groupID, 0x03) << "...\n";
+							logOutput << "Copying Sounds from Group 0x" << lava::numToHexStringWithPadding(sourceGroupFileInfo->second.groupID, 0x03) << " to Group 0x" << lava::numToHexStringWithPadding(destinationGroupFileInfo->second.groupID, 0x03) << "...\n\n";
 
 							if (sourceGroupBundle.populatedSuccessfully)
 							{
@@ -790,6 +786,85 @@ namespace lava
 														logOutput << currMessage->specialMessageText;
 													}
 													logOutput << "\n";
+												}
+											}
+										}
+										if (soundCorr.successfulMatches > 0)
+										{
+											logOutput << "\nFinalized Sound Mapping:\n";
+											for (auto i : soundCorr.matches)
+											{
+												std::pair<unsigned long, unsigned long>* sourceGroupDataIndeces = &i.second.sourceGroupDataIndex;
+												std::pair<unsigned long, unsigned long>* destGroupDataIndeces = &i.second.destinationGroupDataIndex;
+												logOutput << std::left;
+												if (sourceGroupDataIndeces->first < ULONG_MAX)
+												{
+													unsigned long sourceSoundEffectNameIndex = 0x194 +
+														sourceGroupBundle.groupEntriesFirstSoundIndex[sourceGroupDataIndeces->first] + sourceGroupDataIndeces->second;
+													logOutput.width(0x20);
+													logOutput << sourceBrsar.getSymbString(sourceSoundEffectNameIndex) << " (InfoIndex: 0x"
+														<< lava::numToHexStringWithPadding(i.second.sourceGroupInfoIndex, 0x04) + ")";
+												}
+												else
+												{
+													logOutput.width(0x20);
+													logOutput << "[NO_EQUIVALENT]" << " (InfoIndex: ------)";
+												}
+												logOutput << "    ->    ";
+												std::string destinationSoundNameString = "";
+												if (destGroupDataIndeces->first < ULONG_MAX)
+												{
+													unsigned long destSoundEffectNameIndex = 0x194 +
+														destinationGroupBundle.groupEntriesFirstSoundIndex[destGroupDataIndeces->first] + destGroupDataIndeces->second;
+													logOutput.width(0x20);
+													logOutput << sourceBrsar.getSymbString(destSoundEffectNameIndex) << " (InfoIndex: 0x"
+														<< lava::numToHexStringWithPadding(i.second.destinationGroupInfoIndex, 0x04) + ")\n";
+												}
+												else
+												{
+													logOutput.width(0x20);
+													logOutput << "[NO_EQUIVALENT]" << " (InfoIndex: ------)\n";
+												}
+											}
+											auto noMatchFindRes = soundCorr.failedMatches.find(groupPortSoundCorrMessageCode::sCMC_NO_MATCH);
+											if (noMatchFindRes != soundCorr.failedMatches.end())
+											{
+												std::vector<groupPortEntryMessageBundle>* noMatchVecPtr = &noMatchFindRes->second;
+												groupPortEntryInfoBundle* defaultBundlePtr = &soundCorr.matches.begin()->second;
+												for (unsigned long i = 0; i < noMatchVecPtr->size(); i++)
+												{
+													groupPortEntryMessageBundle* bundlePtr = &((*noMatchVecPtr)[i]);
+													std::pair<unsigned long, unsigned long>* sourceGroupDataIndeces = &bundlePtr->sourceGroupDataIndex;
+													std::pair<unsigned long, unsigned long>* destGroupDataIndeces = &defaultBundlePtr->destinationGroupDataIndex;
+													logOutput << std::left;
+													if (sourceGroupDataIndeces->first < ULONG_MAX)
+													{
+														unsigned long sourceSoundEffectNameIndex = 0x194 +
+															sourceGroupBundle.groupEntriesFirstSoundIndex[sourceGroupDataIndeces->first] + sourceGroupDataIndeces->second;
+														logOutput.width(0x20);
+														logOutput << sourceBrsar.getSymbString(sourceSoundEffectNameIndex) << " (InfoIndex: 0x"
+															<< lava::numToHexStringWithPadding(bundlePtr->sourceGroupInfoIndex, 0x04) + ")";
+													}
+													else
+													{
+														logOutput.width(0x20);
+														logOutput << "[NO_EQUIVALENT]" << " (InfoIndex: ------)";
+													}
+													logOutput << "    ->    ";
+													std::string destinationSoundNameString = "";
+													if (destGroupDataIndeces->first < ULONG_MAX)
+													{
+														unsigned long destSoundEffectNameIndex = 0x194 +
+															destinationGroupBundle.groupEntriesFirstSoundIndex[destGroupDataIndeces->first] + destGroupDataIndeces->second;
+														logOutput.width(0x20);
+														logOutput << sourceBrsar.getSymbString(destSoundEffectNameIndex) << " (InfoIndex: 0x"
+															<< lava::numToHexStringWithPadding(defaultBundlePtr->destinationGroupInfoIndex, 0x04) + ")\n";
+													}
+													else
+													{
+														logOutput.width(0x20);
+														logOutput << "[NO_EQUIVALENT]" << " (InfoIndex: ------)\n";
+													}
 												}
 											}
 										}
