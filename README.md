@@ -35,7 +35,7 @@ Simply grab the appropriate .zip for your desire character's soundbank, and foll
 - Run "Super Sawndz.exe", and click the "..." button above the "Insert" button, then navigate to and select your "44.sawnd" file.
 - In the main Super Sawnd window, press the "Insert" button, and wait for the program to finish.
 ### Step 1b: Inserting Custom Soundbanks (Optional)
-- This step is optional, but if you intend to use an existing custom Soundbank for your EX Character, you'll want to insert their ".sawnd" files in the same way that you did the empty "44.sawnd" file.
+- If you intend to use an existing custom Soundbank for your EX Character, you'll want to insert its ".sawnd" file in the same way that you did the empty "44.sawnd" file.
 ### Step 2: Running lavaSawndPortingUtility
 - Extract the lavaSawndPortingUtility release .zip, and place your "smashbros_sound.brsar" into the same folder as the included executable.
 - Open the included "soundbanksToPort.txt" file, and follow its instructions to add a new entry which ports your source character's sounds into a Snake soundbank.
@@ -60,14 +60,14 @@ Simply grab the appropriate .zip for your desire character's soundbank, and foll
 - Right-click the "Misc Data[0]" entry, and select "Replace", then navigate to and select your "moveset_sfxconverted.dat" file from Step 5.
 - Save the newly edited moveset file.
 ### Step 7: Place the New .sawnd and Moveset File onto your SD Card.
-- Rename the .sawnd file you got from Step 2 appropriately. For P+EX clones, the name of this file should be the same as the Soundbank ID defined in the clone's "FighterConfigXX.dat".
+- Rename the .sawnd file you got from Step 2 appropriately. For P+EX clones, the name of this file should be the same as the Soundbank ID defined in the clone's "FighterConfigXX.dat". So, for instance, if you've set the Soundbank ID in your character's FighterConfig file to 0x160, your .sawnd file should be named 160.sawnd.
 - Copy that file into your build's "/pf/sfx/" directory on your (virtual or non-virtual) SD Card.
 - Rename the edited moveset file from Step 6 appropriately, then copy it into your clone's folder in your build's "pf/fighter/" directory.
 
 # Answers to Anticipated Questions and Issues
 >My clone is completely silent in-game, what happened?
 
-This is almost certainly a Soundbank ID issue, make sure that you correctly entered your clone's Soundbank ID at every step of this guide. Be especially mindful about whether or not you're providing/looking at decimal or hexadecimal numbers at any given point.
+This is almost certainly a Soundbank ID issue, make sure that you correctly entered your clone's Soundbank ID at every step of this guide. Be especially mindful about whether or not you're providing/looking at decimal or hexadecimal numbers at any given point, as getting the two mixed up can cause problems.
 
 >My clone causes an infinite load when entering/exiting matches, what's going on?
 
@@ -75,7 +75,11 @@ This is most likely because the character's .sawnd file is too big; in my observ
 
 >My clone mostly works, but sometimes produces unexpected/incorrect sounds.
 
-This is likely because certain sounds in your source soundbank couldn't be properly mapped to a sound in your destination soundbank, causing every time your moveset calls that sound to instead call a default sound that *did* make it into the resulting bank.
+This is likely because certain sounds in your source soundbank couldn't be properly mapped to a sound in your destination soundbank, causing every time your moveset calls that sound to instead call a default sound that *did* make it into the resulting bank. Check the log file produced by the program for details on any unusually mapped sounds.
+
+>My clone causes loud static noises during gameplay, what happened?
+
+This is tends to occur when sound data ends up either severely misaligned or otherwise corrupted in the porting process. This usually happens as a result of improperly formatted .sawnd files, though it can *also* be caused by bugs in code. In the event this happens, DM me with the static-y .sawnd and the .sawnd you ported from, and I'll see about fixing it.
 
 >Can I edit soundbanks produced by this process after the fact?
 
