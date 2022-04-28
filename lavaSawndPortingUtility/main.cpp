@@ -9,13 +9,16 @@ const std::string sawndFileSuffix = ".sawnd";
 const std::string logFileSuffix = "_log.txt";
 const std::string metadataFileSuffix = "_meta.txt";
 const std::string sCorrFileSuffix = "_sound.txt";
+const std::string lMPRFileSuffix = "_lMPR.xml";
 
 // Toggles lMPR patch generation. Will be disabled in release builds until I figure out how to edit Misc. Sound Lists.
 // The existing "Porting Tools" SFX Changer can do this just fine, that should be prefered at least until I figure this out.
 #define ENABLE_LMPR_OUTPUT false
-#if ENABLE_LMPR_OUTPUT == true
-const std::string lMPRFileSuffix = "_lMPR.xml";
-#endif
+// Toggles porting every bank at once. Disable this for release builds.
+#define PORT_ALL_BANKS false
+// Toggles outputing ported banks to their own directories. Useful for repacking .zips.
+// Forced off when PORT_ALL_BANKS is off because I can't currently generate folders on the fly.
+#define OUTPUT_PORTS_TO_DEDICATED_DIR (false && PORT_ALL_BANKS)
 
 int stringToNum(const std::string& stringIn, bool allowNeg = 0, int defaultVal = INT_MAX)
 {
@@ -150,9 +153,17 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 			// Checks that both fighter IDs had group info associated with them.
 			if (sourceCharGroupInfoItr != fIDGroupInfoMapEndItr && destinationCharGroupInfoItr != fIDGroupInfoMapEndItr)
 			{
-				std::string outputFileName = outputDirectory + lava::numToHexStringWithPadding(destinationCharGroupInfoItr->second.groupID - 0x07, 0x03);
+				std::string outputFileName = "";
+#if OUTPUT_PORTS_TO_DEDICATED_DIR == true
+				outputFileName = lava::numToHexStringWithPadding(destinationCharGroupInfoItr->second.groupID - 0x07, 0x03);
 				outputFileName += "_(" + sourceCharNameMapItr->second + "_PORT)";
-
+				outputFileName += "/" + outputFileName;
+				outputFileName = outputDirectory + outputFileName;
+#else
+				outputFileName = lava::numToHexStringWithPadding(destinationCharGroupInfoItr->second.groupID - 0x07, 0x03);
+				outputFileName += "_(" + sourceCharNameMapItr->second + "_PORT)";
+				outputFileName = outputDirectory + outputFileName;
+#endif
 				std::ofstream fileOut(outputFileName + sawndFileSuffix, std::ios_base::out | std::ios_base::binary);
 				if (fileOut.is_open())
 				{
@@ -163,7 +174,6 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 						log << "Porting \"" << sourceCharNameMapItr->second << "\" to \"" << destinationCharNameMapItr->second << "\"...\n";
 
 						lava::brawl::sawndz::groupPortSoundCorrespondence soundCorrReceiver;
-						//result = brsarFileIn.portGroupToGroup(sourceCharNameMapItr->first, destinationCharNameMapItr->first, fileOut, log, &soundCorrReceiver);
 						result = lava::brawl::sawndz::portGroupToGroup(brsarFileIn, sourceCharNameMapItr->first, destinationCharNameMapItr->first, fileOut, log, &soundCorrReceiver);
 						fileOut.close();
 
@@ -194,7 +204,6 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 						{
 							std::cerr << "Failed to generate match data for this port: unable to write to \"" << outputFileName << sCorrFileSuffix << "\".\n";
 						}
-
 #if ENABLE_LMPR_OUTPUT == true
 						std::ofstream lMPROut(outputFileName + lMPRFileSuffix, std::ios_base::out);
 						if (lMPROut.is_open())
@@ -257,7 +266,8 @@ bool portAllFighterBanksToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, u
 	return result;
 }
 
-int portAllBanksMain(int argc, char* argv[])
+#if PORT_ALL_BANKS == true
+int main(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
@@ -281,7 +291,7 @@ int portAllBanksMain(int argc, char* argv[])
 	_getch();
 	return 0;
 }
-
+#else
 int main(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
@@ -315,7 +325,7 @@ int main(int argc, char* argv[])
 	_getch();
 	return 0;
 }
-
+#endif
 int summarizeSawndMain(int argc, char* argv[])
 {
 	std::cout << "Lava Sawnd Summary Utility " << lava::brawl::sawndz::version << "\n";
