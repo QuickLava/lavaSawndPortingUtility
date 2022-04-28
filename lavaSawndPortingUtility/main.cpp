@@ -185,7 +185,7 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 						}
 						else
 						{
-							std::cerr << "Failed to generate Sawnd metadata for this port: unable to write to \"" << outputFileName << metadataFileSuffix << "\".\n";
+							std::cerr << "[ERROR] Failed to generate Sawnd metadata for this port: unable to write to \"" << outputFileName << metadataFileSuffix << "\".\n";
 						}
 
 						std::ofstream soundCorrOut(outputFileName + sCorrFileSuffix, std::ios_base::out);
@@ -197,12 +197,12 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 							}
 							else
 							{
-								std::cerr << "Failed to generate match data for this port: no successful matches were recorded.\n";
+								std::cerr << "[ERROR] Failed to generate match data for this port: no successful matches were recorded.\n";
 							}
 						}
 						else
 						{
-							std::cerr << "Failed to generate match data for this port: unable to write to \"" << outputFileName << sCorrFileSuffix << "\".\n";
+							std::cerr << "[ERROR] Failed to generate match data for this port: unable to write to \"" << outputFileName << sCorrFileSuffix << "\".\n";
 						}
 #if ENABLE_LMPR_OUTPUT == true
 						std::ofstream lMPROut(outputFileName + lMPRFileSuffix, std::ios_base::out);
@@ -214,38 +214,38 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 							}
 							else
 							{
-								std::cerr << "Failed to generate an lMPR Patch for this port: no successful matches were recorded.\n";
+								std::cerr << "[ERROR] Failed to generate an lMPR Patch for this port: no successful matches were recorded.\n";
 							}
 						}
 						else
 						{
-							std::cerr << "Failed to generate an lMPR Patch for this port: unable to write to \"" << outputFileName << lMPRFileSuffix << "\".\n";
+							std::cerr << "[ERROR] Failed to generate an lMPR Patch for this port: unable to write to \"" << outputFileName << lMPRFileSuffix << "\".\n";
 						}
 #endif
 					}
 					else
 					{
-						std::cerr << "Failed to process port: unable to write to log file location (\"" << outputFileName << logFileSuffix << "\").\n";
+						std::cerr << "[ERROR] Failed to process port: unable to write to log file location (\"" << outputFileName << logFileSuffix << "\").\n";
 					}
 				}
 				else
 				{
-					std::cerr << "Failed to process port: unable to write to sawnd file location (\"" << outputFileName << sawndFileSuffix << "\").\n";
+					std::cerr << "[ERROR] Failed to process port: unable to write to sawnd file location (\"" << outputFileName << sawndFileSuffix << "\").\n";
 				}
 			}
 			else
 			{
-				std::cerr << "Failed to process port: couldn't find group info data for provided Fighter IDs.\n";
+				std::cerr << "[ERROR] Failed to process port: couldn't find group info data for provided Fighter IDs.\n";
 			}
 		}
 		else
 		{
-			std::cerr << "Failed to process port: provided Fighter IDs invalid.\n";
+			std::cerr << "[ERROR] Failed to process port: provided Fighter IDs invalid.\n";
 		}
 	}
 	else
 	{
-		std::cerr << "Failed to process port: unable to parse BRSAR.\n";
+		std::cerr << "[ERROR] Failed to process port: unable to parse BRSAR.\n";
 	}
 
 	return result;
@@ -349,12 +349,12 @@ int summarizeSawndMain(int argc, char* argv[])
 			}
 			else
 			{
-				std::cout << "Failure! Couldn't open summary output file (" << summaryFilePath << ")!\n";
+				std::cerr << "[ERROR] Failure! Couldn't open summary output file (" << summaryFilePath << ")!\n";
 			}
 		}
 		else
 		{
-			std::cout << "Failure! Couldn't open input file to summarize!\n";
+			std::cerr << "[ERROR] Failure! Couldn't open input file to summarize!\n";
 		}
 	}
 

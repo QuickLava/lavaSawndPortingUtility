@@ -130,7 +130,7 @@ namespace lava
 								std::vector<char> padding{};
 								if (currEntry->packetContents.paddingLength > 0x100)
 								{
-									std::cerr << "Padding length not initialized properly.\n";
+									std::cerr << "[ERROR] Padding length not initialized properly.\n";
 								}
 								else
 								{
@@ -169,7 +169,7 @@ namespace lava
 								}
 								if (prevEndLoc != ULONG_MAX && nextStartLoc != ULONG_MAX)
 								{
-									std::cout << "Packet for Collection " << i << ", Wave 0x" << lava::numToHexStringWithPadding(u, 0x02) << " wasn't populated, exporting improvized packet!\n";
+									std::cout << "[WARNING] Packet for Collection " << i << ", Wave 0x" << lava::numToHexStringWithPadding(u, 0x02) << " wasn't populated, exporting improvized packet!\n";
 
 									currEntry->packetContents.address = _NOT_IN_FILE_ADDRESS;
 									currEntry->packetContents.populated = 1;
@@ -182,8 +182,8 @@ namespace lava
 								}
 								else
 								{
-									std::cerr << "Couldn't Export Wave Data for Collection " << i << ", Wave #" << u << "\n";
-									std::cerr << "Packet contents not populated, and unable to determine appropriate bounds for an improvized packet!\n";
+									std::cerr << "[ERROR] Couldn't Export Wave Data for Collection " << i << ", Wave #" << u << "\n";
+									std::cerr << "\tPacket contents not populated, and unable to determine appropriate bounds for an improvized packet!\n";
 								}
 							}
 						}
@@ -368,7 +368,7 @@ namespace lava
 								result.collectionsOrder.push_back(std::make_pair(1, result.inactiveCollections.size()));
 								result.inactiveCollections.push_back(tempEntry);
 								result.populatedSuccessfully &= populatedSuccessfully;
-								std::cerr << "\tCollection (File ID: " << tempEntry.fileID << ") is disabled, and won't be used for porting.\n";
+								//std::cout << "\tCollection (File ID: " << tempEntry.fileID << ") is disabled, and won't be used for porting.\n";
 							}
 						}
 
@@ -519,8 +519,6 @@ namespace lava
 								}
 							}
 						}
-
-
 					}
 				}
 
@@ -595,7 +593,7 @@ namespace lava
 								}
 								else
 								{
-									std::cerr << "Skipping empty sound!\n";
+									std::cout << "[WARNING] Skipping empty sound!\n";
 								}
 							}
 							else
@@ -689,7 +687,7 @@ namespace lava
 										}
 										else
 										{
-											std::cerr << "Failed to port sounds, skipping export.\n";
+											std::cerr << "[ERROR] Failed to port sounds, skipping export.\n";
 										}
 
 										logOutput << "Successfully found destinations for " << soundCorr.successfulMatches << " sound(s).\n";
@@ -829,6 +827,7 @@ namespace lava
 											auto noMatchFindRes = soundCorr.failedMatches.find(groupPortSoundCorrMessageCode::sCMC_NO_MATCH);
 											if (noMatchFindRes != soundCorr.failedMatches.end())
 											{
+												logOutput << "-------------No Sound Data Preserved For Entries Past This Point, Calls to These Redirected As Listed-------------\n";
 												std::vector<groupPortEntryMessageBundle>* noMatchVecPtr = &noMatchFindRes->second;
 												groupPortEntryInfoBundle* defaultBundlePtr = &soundCorr.matches.begin()->second;
 												for (unsigned long i = 0; i < noMatchVecPtr->size(); i++)

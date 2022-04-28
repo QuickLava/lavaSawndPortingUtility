@@ -1130,7 +1130,7 @@ result = 1;
 									associatedWaveInfo->packetContents.length -= overlapSize;
 									associatedWaveInfo->packetContents.body.resize(associatedWaveInfo->packetContents.body.size() - overlapSize);
 									associatedWaveInfo->packetContents.paddingLength = 0x00;
-									std::cout << "Warning: Wave Packet Truncation performed! Lost 0x" << lava::numToHexStringWithPadding(overlapSize, 0x02) << " byte(s) as a result.\n";
+									std::cout << "[WARNING] Wave Packet Truncation performed! Lost 0x" << lava::numToHexStringWithPadding(overlapSize, 0x02) << " byte(s) as a result.\n";
 								}
 							}
 							else
