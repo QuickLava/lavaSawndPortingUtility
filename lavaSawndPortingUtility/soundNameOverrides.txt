@@ -1,16 +1,15 @@
 // Mario Overrides
-"snd_se_mario_fire_nage", "snd_se_027"
-"snd_se_mario_fire_hane", "snd_se_028"
-"snd_se_mario_coin", "snd_se_029"
-"snd_se_mario_jump", "snd_se_030"
-"snd_se_mario_spin", "snd_se_031"
-"snd_se_mario_mant", "snd_se_032"
-"snd_se_mario_giant_swing", "snd_se_033"
-"snd_se_mario_D_SpecialN03", "snd_se_034"
-// Mario Overrides (Destructive)
-"snd_se_mario_ouen", "snd_se_024"
-"snd_se_mario_big", "snd_se_025"
-"snd_se_mario_dokan", "snd_se_026"
+"snd_se_mario_ouen", "snd_se_027"
+"snd_se_mario_big", "snd_se_028"
+"snd_se_mario_dokan", "snd_se_029"
+"snd_se_mario_fire_nage", "snd_se_030"
+"snd_se_mario_fire_hane", "snd_se_031"
+"snd_se_mario_coin", "snd_se_032"
+"snd_se_mario_jump", "snd_se_033"
+"snd_se_mario_spin", "snd_se_034"
+"snd_se_mario_mant", "snd_se_035"
+"snd_se_mario_giant_swing", "snd_se_036"
+"snd_se_mario_D_SpecialN03", "snd_se_037"
 
 // Link Overrides (Destructive)
 "snd_se_link_DSpecialNStart", "snd_se_042"
