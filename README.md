@@ -8,7 +8,7 @@ This program was based directly on work by:
 # Using this Program to Port Soundbanks for Use With BrawlEX/P+EX Clones
 ## Pre-built Soundbanks
 If you intend to base your clone's soundbank off of a vanilla Brawl character's, you actually don't need to use this program at all! They've all been ported ahead of time, and can be found [here](https://drive.google.com/drive/folders/1Cb-1fEHXq6LIsUFkfyqixGgCxMRnP_PR).
-Simply grab the appropriate .zip for your desire character's soundbank, and follow the instructions below, starting at Step 3.
+Simply grab the appropriate .zip for your source character's soundbank, and follow the instructions below, starting at Step 3. Additionally, note that some characters have sound changes between vBrawl and PM/P+. If you want those changes reflected in any banks you port, you'll need to import the relevant .sawnd files into your .brsar before following this guide.
 
 ## Necessary Materials
 - A functional BrawlEX/P+EX clone, with a unique Soundbank ID assigned in their "FighterConfigXX.dat". Follow the official [BrawlEX Guide for P+Ex](https://docs.google.com/document/d/1ZoL_qDcwUpUXg82cKaUp-6D_AcfpFctoW6GXFY74_0k/edit#) if you don't have this done yet.
