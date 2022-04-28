@@ -171,6 +171,7 @@ bool portFighterBankToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, unsig
 					if (log.is_open())
 					{
 						std::cout << "Porting \"" << sourceCharNameMapItr->second << "\" to \"" << destinationCharNameMapItr->second << "\"...\n";
+						log << "lavaSawndPortingUtility " << lava::brawl::sawndz::version << "\n";
 						log << "Porting \"" << sourceCharNameMapItr->second << "\" to \"" << destinationCharNameMapItr->second << "\"...\n";
 
 						lava::brawl::sawndz::groupPortSoundCorrespondence soundCorrReceiver;
@@ -269,7 +270,7 @@ bool portAllFighterBanksToFighter(lava::brawl::sawndz::brsarFile& brsarFileIn, u
 #if PORT_ALL_BANKS == true
 int main(int argc, char* argv[])
 {
-	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
+	std::cout << "lavaSawndPortingUtility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
 	std::cout << " - Jaklub and Agoaj, as well as mstaklo, ssbbtailsfan, stickman and VILE (Sawndz, Super Sawndz)\n";
 	std::cout << " - Soopercool101, as well as Kryal, BlackJax96, and libertyernie (BrawlLib, BrawlBox, BrawlCrate)\n\n";
@@ -294,7 +295,7 @@ int main(int argc, char* argv[])
 #else
 int main(int argc, char* argv[])
 {
-	std::cout << "Lava Sawnd Porting Utility " << lava::brawl::sawndz::version << "\n";
+	std::cout << "lavaSawndPortingUtility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
 	std::cout << " - Jaklub and Agoaj, as well as mstaklo, ssbbtailsfan, stickman and VILE (Sawndz, Super Sawndz)\n";
 	std::cout << " - Soopercool101, as well as Kryal, BlackJax96, and libertyernie (BrawlLib, BrawlBox, BrawlCrate)\n\n";
@@ -328,7 +329,7 @@ int main(int argc, char* argv[])
 #endif
 int summarizeSawndMain(int argc, char* argv[])
 {
-	std::cout << "Lava Sawnd Summary Utility " << lava::brawl::sawndz::version << "\n";
+	std::cout << "lavaSawndSummaryUtility " << lava::brawl::sawndz::version << "\n";
 	std::cout << "Based directly on work by:\n";
 	std::cout << " - Jaklub and Agoaj, as well as mstaklo, ssbbtailsfan, stickman and VILE (Sawndz, Super Sawndz)\n";
 	std::cout << " - Soopercool101, as well as Kryal, BlackJax96, and libertyernie (BrawlLib, BrawlBox, BrawlCrate)\n\n";
